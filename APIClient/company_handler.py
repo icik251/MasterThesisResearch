@@ -103,20 +103,3 @@ class CompanyHandler:
                 print(f"Error on company: {company['cik']} - {company['year']}")
 
         return list_of_fixed_companies
-
-
-# company_handler = CompanyHandler(
-#     path_companies_to_extract="APIClient/data/nasdaq/energy_all.csv",
-# )
-
-# list_of_companies = []
-# for company in company_handler.load_chosen_companies_from_db():
-#     list_of_companies.append(company)
-
-# company_handler.add_company(list_of_companies)
-
-# res = company_handler.fix_duplicate_companies()
-# for company in res:
-#     print(company["data"][0]["cik"])
-#     print(company["data"][0]["year"])
-#     print("---------")

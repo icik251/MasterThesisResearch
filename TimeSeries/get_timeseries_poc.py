@@ -27,28 +27,35 @@ data = r.json()
 
 import yfinance as yf
 import pandas as pd
+import plotly.express as px
 
 try:
     # download the stock price
-    stock_df = yf.download("MSFT", period="max")
+    stock_df = yf.download("CIVI", start="2017-01-01")
     stock_df.reset_index(level=0, inplace=True)
-    # stock_df["Date"].values
-    # append the individual stock prices
-    if len(stock_df) == 0:
-        None
-    else:
-        list_of_res = []
-        for timestamp, open, high, low, close, adj_close, volume in zip(
-            stock_df["Date"].values,
-            stock_df["Open"].values,
-            stock_df["High"].values,
-            stock_df["Low"].values,
-            stock_df["Close"].values,
-            stock_df["Adj Close"].values,
-            stock_df["Volume"].values,
-        ):
-            list_of_res.append({})
-            pass
+    fig = px.line(stock_df, x="Date", y="Close")
+    fig.show()
+    fig = px.line(stock_df, x="Date", y="Adj Close")
+    fig.show()
+
+    # stock_df.reset_index(level=0, inplace=True)
+    # # stock_df["Date"].values
+    # # append the individual stock prices
+    # if len(stock_df) == 0:
+    #     None
+    # else:
+    #     list_of_res = []
+    #     for timestamp, open, high, low, close, adj_close, volume in zip(
+    #         stock_df["Date"].values,
+    #         stock_df["Open"].values,
+    #         stock_df["High"].values,
+    #         stock_df["Low"].values,
+    #         stock_df["Close"].values,
+    #         stock_df["Adj Close"].values,
+    #         stock_df["Volume"].values,
+    #     ):
+    #         list_of_res.append({})
+    #         pass
 
         # stock.to_csv("time_series/output/MSFT_max.csv")
 except Exception as e:

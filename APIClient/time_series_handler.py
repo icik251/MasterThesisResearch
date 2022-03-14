@@ -22,5 +22,3 @@ class TimeSeriesHandler(CompanyHandler):
                 print(f"Company time-series {company_base['cik']} processing")
 
 
-# timeseries_handler = TimeSeriesHandler("APIClient/data/nasdaq/energy_all.csv")
-# timeseries_handler.add_timeseries()
