@@ -23,7 +23,7 @@ class CompanyHandler:
     def __init__(self, path_companies_to_extract) -> None:
         self.path_companies_to_extract = path_companies_to_extract
 
-    def add_company(self, list_of_companies, req_per_min=100):
+    def add_companies(self, list_of_companies, req_per_min=100):
         # Send certain amount of messages per X amount of time to prevent errors on connections
         req_count = 0
 

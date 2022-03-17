@@ -46,8 +46,6 @@ class Document(object):
             section_name = section_search_terms["itemname"]
             section_name_actual = section_search_terms["sectionname"]
 
-            print('document, 52')
-            print(section_search_terms)
             search_pairs = section_search_terms[self.search_terms_type()]
             (
                 text_extract,

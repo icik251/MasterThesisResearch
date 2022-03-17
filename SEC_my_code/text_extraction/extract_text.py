@@ -1,4 +1,5 @@
 import copy
+from msilib import sequence
 import os
 import re
 
@@ -90,53 +91,109 @@ def download_filing(index_url: str, company_description: int):
             doc_metadata.document_group = document_group
             doc_metadata.metadata_file_name = local_path
 
-            # search for a <html>...</html> block in the DOCUMENT
-            html_search = re.search(r"<(?i)html>.*?</(?i)html>", doc_text, re.DOTALL)
-            xbrl_search = re.search(r"<(?i)xbrl>.*?</(?i)xbrl>", doc_text, re.DOTALL)
-            # occasionally a (somewhat corrupted) filing includes a mixture
-            # of HTML-format documents, but some of them are enclosed in
-            # <TEXT>...</TEXT> tags and others in <HTML>...</HTML> tags.
-            # If the first <TEXT>-enclosed document is before the first
-            # <HTML> enclosed one, then we take that one instead of
-            # the block identified in html_search.
-            text_search = re.search(r"<(?i)text>.*?</(?i)text>", doc_text, re.DOTALL)
-            if (
-                text_search
-                and html_search
-                and text_search.start() < html_search.start()
-                and html_search.start() > 5000
-            ):
-                html_search = text_search
-            if xbrl_search:
-                doc_metadata.extraction_method = "xbrl"
-                doc_text = xbrl_search.group()
-                # main_path = local_path + ".xbrl"
-                reader_class = HtmlDocument
-            elif html_search:
-                # if there's an html block inside the DOCUMENT then just
-                # take this instead of the full DOCUMENT text
-                doc_metadata.extraction_method = "html"
-                doc_text = html_search.group()
-                # main_path = local_path + ".htm"
-                reader_class = HtmlDocument
-            else:
-                doc_metadata.extraction_method = "txt"
-                # main_path = local_path + ".txt"
-                reader_class = TextDocument
-
-            doc_metadata.original_file_size = str(len(doc_text)) + " chars"
-            reader_class(
-                doc_metadata.original_file_name,
-                doc_text,
-                doc_metadata.extraction_method,
-            ).get_excerpt(
-                doc_text, document_group, doc_metadata, skip_existing_excerpts=False
+            # Try to find accelerated between tr
+            accelerated_search = re.search(
+                r"<tr>.*accelerated.*</tr>", doc_text, re.DOTALL
             )
+            match_str = accelerated_search.group(0).lower().replace('<', ' ').replace('>', ' ').replace(';', ' ')
+            list_of_symbols = ['&#9746', '&#9745', '&#x2611', '&#x2612', 'x']
+            list_of_splitted_match = match_str.split()
+            current_match = None
+            in_sequence = False
+            for idx, substring in enumerate(list_of_splitted_match):
+                if in_sequence and substring in list_of_symbols:
+                    break
+                
+                if substring == 'accelerated' and list_of_splitted_match[idx-1] == 'large':
+                    in_sequence = True
+                    current_match = 'large_accelerated_filer'
+                elif substring == 'accelerated':
+                    in_sequence = True
+                    current_match = 'accelerated_filer'
+                elif substring == 'non-accelerated':
+                    in_sequence = True
+                    current_match = 'non_accelerated_filer'
+                elif substring == 'smaller' and list_of_splitted_match[idx+1] == 'reporting':
+                    in_sequence = True
+                    current_match = 'smaller_reporting_company'
+            
+            print(index_url)
+            print(current_match)
+            print('---------------')
 
-            print("done")
+                
+            # # search for a <html>...</html> block in the DOCUMENT
+            # html_search = re.search(r"<(?i)html>.*?</(?i)html>", doc_text, re.DOTALL)
+            # xbrl_search = re.search(r"<(?i)xbrl>.*?</(?i)xbrl>", doc_text, re.DOTALL)
+            # # occasionally a (somewhat corrupted) filing includes a mixture
+            # # of HTML-format documents, but some of them are enclosed in
+            # # <TEXT>...</TEXT> tags and others in <HTML>...</HTML> tags.
+            # # If the first <TEXT>-enclosed document is before the first
+            # # <HTML> enclosed one, then we take that one instead of
+            # # the block identified in html_search.
+            # text_search = re.search(r"<(?i)text>.*?</(?i)text>", doc_text, re.DOTALL)
+            # if (
+            #     text_search
+            #     and html_search
+            #     and text_search.start() < html_search.start()
+            #     and html_search.start() > 5000
+            # ):
+            #     html_search = text_search
+            # if xbrl_search:
+            #     doc_metadata.extraction_method = "xbrl"
+            #     doc_text = xbrl_search.group()
+            #     # main_path = local_path + ".xbrl"
+            #     reader_class = HtmlDocument
+            # elif html_search:
+            #     # if there's an html block inside the DOCUMENT then just
+            #     # take this instead of the full DOCUMENT text
+            #     doc_metadata.extraction_method = "html"
+            #     doc_text = html_search.group()
+            #     # main_path = local_path + ".htm"
+            #     reader_class = HtmlDocument
+            # else:
+            #     doc_metadata.extraction_method = "txt"
+            #     # main_path = local_path + ".txt"
+            #     reader_class = TextDocument
+
+            # doc_metadata.original_file_size = str(len(doc_text)) + " chars"
+            # reader_class(
+            #     doc_metadata.original_file_name,
+            #     doc_text,
+            #     doc_metadata.extraction_method,
+            # ).get_excerpt(
+            #     doc_text, document_group, doc_metadata, skip_existing_excerpts=False
+            # )
+
+            # print("done")
 
 
 download_filing(
-    index_url="https://www.sec.gov/Archives/edgar/data/2178/0000950129-95-000493-index.html",
+    index_url="https://www.sec.gov/Archives/edgar/data/2178/0000002178-17-000038-index.html",
+    company_description=None,
+)
+
+download_filing(
+    index_url="https://www.sec.gov/Archives/edgar/data/2178/0000002178-20-000057-index.html",
+    company_description=None,
+)
+
+download_filing(
+    index_url="https://www.sec.gov/Archives/edgar/data/1692787/0001784031-21-000007-index.html",
+    company_description=None,
+)
+
+download_filing(
+    index_url="https://www.sec.gov/Archives/edgar/data/1692787/0001784031-21-000004-index.html",
+    company_description=None,
+)
+
+download_filing(
+    index_url="https://www.sec.gov/Archives/edgar/data/738214/0001654954-20-012181-index.html",
+    company_description=None,
+)
+
+download_filing(
+    index_url="https://www.sec.gov/Archives/edgar/data/738214/0001654954-21-004972-index.html",
     company_description=None,
 )

@@ -28,8 +28,6 @@ class TextDocument(Document):
         warnings = []
         text_extract = None
         for st_idx, st in enumerate(search_pairs):
-            print('text_document, 31')
-            print(st)
             # ungreedy search (note '.*?' regex expression between 'start' and 'end' patterns
             # also using (?:abc|def) for a non-capturing group
             # st = super().search_terms_pattern_to_regex()
