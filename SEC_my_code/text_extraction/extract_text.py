@@ -102,20 +102,27 @@ def download_filing(index_url: str, company_description: int):
                     "#8999",
                     "#254",
                     "#253",
+                    "#x2713",
+                    "#10003",
                     "q",
                     "x",
                     "/ix:nonnumeric",
                 ]
+                list_to_end_seq = ["#9744"]
                 list_of_splitted_match = match_str.lower().split()
                 in_sequence = False
                 with open("testing_extraction.json", "w") as f:
                     json.dump(list_of_splitted_match, f)
 
                 for idx, substring in enumerate(list_of_splitted_match):
+                    if in_sequence and substring in list_to_end_seq:
+                        in_sequence = False
+                        current_match = None
+
                     if in_sequence and substring in list_of_symbols:
                         break
 
-                    if substring == "smaller":
+                    if substring == "accelerated":
                         print("yes")
                         a = list_of_splitted_match[idx - 1]
                     if (
@@ -186,6 +193,6 @@ def download_filing(index_url: str, company_description: int):
 
 
 download_filing(
-    index_url="https://www.sec.gov/Archives/edgar/data/1163165/0001193125-17-050077-index.html",
+    index_url="https://www.sec.gov/Archives/edgar/data/945764/0000945764-18-000066-index.html",
     company_description=None,
 )

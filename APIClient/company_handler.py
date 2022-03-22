@@ -30,8 +30,7 @@ class CompanyHandler:
 
         for company in list_of_companies:
             if not self.check_company_overview(
-                ticker=company["ticker"],
-                cik=company["cik"]
+                ticker=company["ticker"], cik=company["cik"]
             ):
                 continue
             for edgar_q_name, extracted_dict in company["available_quarters"].items():
@@ -90,9 +89,7 @@ class CompanyHandler:
 
         mongo_handler.close_mongo_connection()
 
-    def check_company_overview(
-        self, ticker, cik, country="USA", sector="ENERGY"
-    ):
+    def check_company_overview(self, ticker, cik, country="USA"):
         resp = requests.get(
             f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={ticker}&apikey={self.av_api_key}"
         )
@@ -106,13 +103,10 @@ class CompanyHandler:
                     f"Not matching for {ticker} | {dict_of_company['Country']} and {country}"
                 )
                 return False
-            if sector not in dict_of_company["Sector"]:
-                print(
-                    f"Not matching for {ticker} | {dict_of_company['Sector']} and {sector}"
-                )
-                return False
         else:
-            print(f"Error for AV for {ticker}, status code {resp.status_code} or empty data")
+            print(
+                f"Error for AV for {ticker}, status code {resp.status_code} or empty data"
+            )
             return False
 
         return True
