@@ -30,8 +30,8 @@ def companies_logic(req_per_min=300):
 
 
 if __name__ == "__main__":
-    companies_logic()
+    companies_logic(req_per_min=100)
 
-    # time_series_logic()
+    # time_series_logic()   
 
     pass

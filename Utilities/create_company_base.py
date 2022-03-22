@@ -101,6 +101,7 @@ def add_company_base_to_db(db, key_ticker, value_dict, dict_of_edgar):
         except Exception as e:
             print("Problem with", key_cik, "and", key_ticker)
 
+
 def finalize_company_base(
     path_res_cik_ticker_json="APIClient\data\cik_to_ticker/res_cik_ticker_till_2022-QTR1.json",
     path_edgar="APIClient/data/edgar",
@@ -113,12 +114,13 @@ def finalize_company_base(
 
     client = pymongo.MongoClient("mongodb://root:root@localhost:27017")
     db = client.SP500_DB
-    
+
     # use multiprocessing and pool
     for key_ticker, dict_values in res_cik_ticker.items():
         add_company_base_to_db(db, key_ticker, dict_values, dict_of_edgar)
 
     client.close()
+
 
 def get_edgar_data(path_edgar="APIClient/data/edgar", possible_types=["10-Q", "10-K"]):
     if os.path.isfile("APIClient\data\cik_to_ticker\dict_edgar.json"):

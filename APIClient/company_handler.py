@@ -22,17 +22,26 @@ happening when adding company. Because duplicate data can be added.
 class CompanyHandler:
     def __init__(self, path_companies_to_extract) -> None:
         self.path_companies_to_extract = path_companies_to_extract
+        self.av_api_key = "DV3U4RGOYLYSQHN8"
 
-    def add_companies(self, list_of_companies, req_per_min=100):
+    def add_companies(self, list_of_companies, req_per_min=100, from_year=2017):
         # Send certain amount of messages per X amount of time to prevent errors on connections
         req_count = 0
 
         for company in list_of_companies:
+            if not self.check_company_overview(
+                ticker=company["ticker"],
+                cik=company["cik"]
+            ):
+                continue
             for edgar_q_name, extracted_dict in company["available_quarters"].items():
                 for key_type_date, index_url in extracted_dict.items():
                     curr_type, filing_date = key_type_date.split("_")
 
-                    if curr_type.split("-")[0] == "10":
+                    if (
+                        curr_type.split("-")[0] == "10"
+                        and int(edgar_q_name.split("-")[0]) >= from_year
+                    ):
 
                         post_dict = {
                             "cik": company["cik"],
@@ -73,10 +82,6 @@ class CompanyHandler:
                 if idx == 0:
                     continue
 
-                # country = row[6]
-                # if country != "United States":
-                #     continue
-
                 curr_company = db["company_base"].find_one({"ticker": row[0]})
                 if curr_company:
                     yield curr_company
@@ -84,6 +89,33 @@ class CompanyHandler:
                     print("Missing data in DB for ticker ", row[0])
 
         mongo_handler.close_mongo_connection()
+
+    def check_company_overview(
+        self, ticker, cik, country="USA", sector="ENERGY"
+    ):
+        resp = requests.get(
+            f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={ticker}&apikey={self.av_api_key}"
+        )
+        if resp.status_code == 200 and resp.text != "{}":
+            dict_of_company = json.loads(resp.text)
+            if int(dict_of_company["CIK"]) != cik:
+                print(f"Not matching for {ticker} | {dict_of_company['CIK']} and {cik}")
+                return False
+            if dict_of_company["Country"] != country:
+                print(
+                    f"Not matching for {ticker} | {dict_of_company['Country']} and {country}"
+                )
+                return False
+            if sector not in dict_of_company["Sector"]:
+                print(
+                    f"Not matching for {ticker} | {dict_of_company['Sector']} and {sector}"
+                )
+                return False
+        else:
+            print(f"Error for AV for {ticker}, status code {resp.status_code} or empty data")
+            return False
+
+        return True
 
     def fix_duplicate_companies(self):
         resp = requests.get("http://localhost:8000/api/v1/company/")

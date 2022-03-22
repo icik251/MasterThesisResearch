@@ -1,4 +1,5 @@
 import copy
+import json
 from msilib import sequence
 import os
 import re
@@ -76,52 +77,68 @@ def download_filing(index_url: str, company_description: int):
                 #     ("ERROR", "form <TYPE> not given in form?: " + filing_url)
                 # )
 
-            local_path = os.path.join(
-                "SEC_my_code/text_extraction/output",
-                str(company_description)
-                + "_"
-                + filing_metadata.sec_cik
-                + "_"
-                + document_type
-                + "_"
-                + filing_metadata.sec_period_of_report,
-            )
             doc_metadata.document_type = document_type
-            # doc_metadata.form_type_internal = form_string
             doc_metadata.document_group = document_group
-            doc_metadata.metadata_file_name = local_path
 
-            # Try to find accelerated between tr
-            accelerated_search = re.search(
-                r"<tr>.*accelerated.*</tr>", doc_text, re.DOTALL
-            )
-            match_str = accelerated_search.group(0).lower().replace('<', ' ').replace('>', ' ').replace(';', ' ')
-            list_of_symbols = ['&#9746', '&#9745', '&#x2611', '&#x2612', 'x']
-            list_of_splitted_match = match_str.split()
             current_match = None
-            in_sequence = False
-            for idx, substring in enumerate(list_of_splitted_match):
-                if in_sequence and substring in list_of_symbols:
-                    break
-                
-                if substring == 'accelerated' and list_of_splitted_match[idx-1] == 'large':
-                    in_sequence = True
-                    current_match = 'large_accelerated_filer'
-                elif substring == 'accelerated':
-                    in_sequence = True
-                    current_match = 'accelerated_filer'
-                elif substring == 'non-accelerated':
-                    in_sequence = True
-                    current_match = 'non_accelerated_filer'
-                elif substring == 'smaller' and list_of_splitted_match[idx+1] == 'reporting':
-                    in_sequence = True
-                    current_match = 'smaller_reporting_company'
-            
-            print(index_url)
-            print(current_match)
-            print('---------------')
+            if doc_text:
+                match_str = (
+                    doc_text.lower()
+                    .replace("<", " ")
+                    .replace(">", " ")
+                    .replace(";", " ")
+                    .replace("&", " ")
+                    .replace("_", " ")
+                    .replace("[", " ")
+                    .replace("]", " ")
+                    .replace("nbsp", " ")
+                    .replace("#160", " ")
+                )
+                list_of_symbols = [
+                    "#9746",
+                    "#9745",
+                    "#x2611",
+                    "#x2612",
+                    "#8999",
+                    "#254",
+                    "#253",
+                    "q",
+                    "x",
+                    "/ix:nonnumeric",
+                ]
+                list_of_splitted_match = match_str.lower().split()
+                in_sequence = False
+                with open("testing_extraction.json", "w") as f:
+                    json.dump(list_of_splitted_match, f)
 
-                
+                for idx, substring in enumerate(list_of_splitted_match):
+                    if in_sequence and substring in list_of_symbols:
+                        break
+
+                    if substring == "smaller":
+                        print("yes")
+                        a = list_of_splitted_match[idx - 1]
+                    if (
+                        substring == "accelerated"
+                        and list_of_splitted_match[idx - 1] == "large"
+                    ):
+                        in_sequence = True
+                        current_match = "large_accelerated_filer"
+                    elif substring == "accelerated":
+                        in_sequence = True
+                        current_match = "accelerated_filer"
+                    elif substring == "non-accelerated":
+                        in_sequence = True
+                        current_match = "non_accelerated_filer"
+                    elif (
+                        substring == "smaller"
+                        and list_of_splitted_match[idx + 1] == "reporting"
+                    ):
+                        in_sequence = True
+                        current_match = "smaller_reporting_company"
+
+            print(current_match)
+
             # # search for a <html>...</html> block in the DOCUMENT
             # html_search = re.search(r"<(?i)html>.*?</(?i)html>", doc_text, re.DOTALL)
             # xbrl_search = re.search(r"<(?i)xbrl>.*?</(?i)xbrl>", doc_text, re.DOTALL)
@@ -169,31 +186,6 @@ def download_filing(index_url: str, company_description: int):
 
 
 download_filing(
-    index_url="https://www.sec.gov/Archives/edgar/data/2178/0000002178-17-000038-index.html",
-    company_description=None,
-)
-
-download_filing(
-    index_url="https://www.sec.gov/Archives/edgar/data/2178/0000002178-20-000057-index.html",
-    company_description=None,
-)
-
-download_filing(
-    index_url="https://www.sec.gov/Archives/edgar/data/1692787/0001784031-21-000007-index.html",
-    company_description=None,
-)
-
-download_filing(
-    index_url="https://www.sec.gov/Archives/edgar/data/1692787/0001784031-21-000004-index.html",
-    company_description=None,
-)
-
-download_filing(
-    index_url="https://www.sec.gov/Archives/edgar/data/738214/0001654954-20-012181-index.html",
-    company_description=None,
-)
-
-download_filing(
-    index_url="https://www.sec.gov/Archives/edgar/data/738214/0001654954-21-004972-index.html",
+    index_url="https://www.sec.gov/Archives/edgar/data/1163165/0001193125-17-050077-index.html",
     company_description=None,
 )
