@@ -1,10 +1,12 @@
 import csv
+from operator import le
 import os
 import time
 import requests
 from datetime import datetime
 import json
 from mongo_handler import MongoHandler
+from collections import Counter
 
 """
 Scraper with celery of 12 workers process around 50 requests per minute.
@@ -112,7 +114,7 @@ class CompanyHandler:
         return True
 
     def fix_duplicate_companies(self):
-        resp = requests.get("http://localhost:8000/api/v1/company/")
+        resp = requests.get("http://localhost:8000/api/v1/company/duplicated/")
         if resp.status_code == 200:
             list_of_companies = json.loads(resp.text)
         else:
@@ -120,12 +122,70 @@ class CompanyHandler:
 
         list_of_fixed_companies = []
         for company in list_of_companies:
-            resp = requests.get(
-                f"http://localhost:8000/api/v1/company/{company['cik']}/{company['year']}"
+            resp = requests.put(
+                f"http://localhost:8000/api/v1/company/duplicated/{company['cik']}/{company['year']}"
             )
-            if resp.status_code == 200:
-                list_of_fixed_companies.append(json.loads(resp.text))
+            resp = json.loads(resp.text)
+            if resp["code"] == 200:
+                list_of_fixed_companies.append(json.loads(resp["data"]))
             else:
                 print(f"Error on company: {company['cik']} - {company['year']}")
 
         return list_of_fixed_companies
+
+    def validate_filings_type(self):
+
+        resp = requests.get(f"http://localhost:8000/api/v1/company")
+        resp = json.loads(resp.text)
+        if resp["code"] == 200:
+            # we want to check the most common type for the year and send to update if needed
+            data = resp["data"]
+
+            for curr_company in data:
+
+                dict_of_id_filings_type = {}
+                for quarter in curr_company["quarters"]:
+                    for metadata in quarter["metadata"]:
+                        dict_of_id_filings_type[metadata["_id"]] = metadata[
+                            "company_type"
+                        ]
+
+                # if there is not difference in the filing types through the year or filing already changed, then skip
+                already_changed = [True if ';' in str(filer) else False for filer in dict_of_id_filings_type.values()]
+                if len(set(dict_of_id_filings_type.values())) == 1 or True in already_changed:
+                    continue
+
+                counter = Counter(dict_of_id_filings_type.values())
+                most_common_type = counter.most_common(1)[0][0]
+
+                for idx_q, quarter in enumerate(curr_company["quarters"]):
+                    for idx_m, metadata in enumerate(quarter["metadata"]):
+                        if (
+                            dict_of_id_filings_type.get(metadata["_id"])
+                            != most_common_type
+                        ):
+                            # the first is the original one ; the second is the most common type
+                            curr_company["quarters"][idx_q]["metadata"][idx_m][
+                                "company_type"
+                            ] = (
+                                str(dict_of_id_filings_type.get(metadata["_id"]))
+                                + ";"
+                                + most_common_type
+                            )
+
+                resp = requests.put(
+                    f"http://localhost:8000/api/v1/company/filing_type/{curr_company['cik']}/{curr_company['year']}",
+                    data=json.dumps(curr_company),
+                )
+                resp = json.loads(resp.text)
+                if resp["code"] == 200:
+                    print(
+                        f"Changed for CIK: {curr_company['cik']} and year: {curr_company['year']}"
+                    )
+                else:
+                    print(resp["message"])
+
+        else:
+            print(
+                resp["message"],
+            )

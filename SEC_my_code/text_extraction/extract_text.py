@@ -106,43 +106,70 @@ def download_filing(index_url: str, company_description: int):
                     "#10003",
                     "q",
                     "x",
-                    "/ix:nonnumeric",
                 ]
+                non_numeric_symbol = "/ix:nonnumeric"
                 list_to_end_seq = ["#9744"]
                 list_of_splitted_match = match_str.lower().split()
                 in_sequence = False
                 with open("testing_extraction.json", "w") as f:
                     json.dump(list_of_splitted_match, f)
 
+                last_substring_match = None
+                curr_nonnumeric_match = False
                 for idx, substring in enumerate(list_of_splitted_match):
                     if in_sequence and substring in list_to_end_seq:
                         in_sequence = False
+                        curr_nonnumeric_match = False
                         current_match = None
+                        
 
                     if in_sequence and substring in list_of_symbols:
                         break
+                    
+                    elif in_sequence and substring == non_numeric_symbol:
+                        curr_nonnumeric_match = True
 
-                    if substring == "accelerated":
-                        print("yes")
-                        a = list_of_splitted_match[idx - 1]
                     if (
                         substring == "accelerated"
                         and list_of_splitted_match[idx - 1] == "large"
-                    ):
+                    ):  
+                        # if there is already a valid match when we go to the next type
+                        if curr_nonnumeric_match:
+                            break
                         in_sequence = True
                         current_match = "large_accelerated_filer"
-                    elif substring == "accelerated":
+                        last_substring_match = substring
+                    elif substring == "accelerated" and last_substring_match != "non":
+                        # if there is already a valid match when we go to the next type
+                        if curr_nonnumeric_match:
+                            break
                         in_sequence = True
                         current_match = "accelerated_filer"
+                        last_substring_match = substring
                     elif substring == "non-accelerated":
+                        # if there is already a valid match when we go to the next type
+                        if curr_nonnumeric_match:
+                            break
                         in_sequence = True
                         current_match = "non_accelerated_filer"
+                        last_substring_match = substring
+                    elif substring == "non":
+                        # if there is already a valid match when we go to the next type
+                        if curr_nonnumeric_match:
+                            break
+                        in_sequence = True
+                        current_match = "non_accelerated_filer"
+                        last_substring_match = substring
                     elif (
                         substring == "smaller"
                         and list_of_splitted_match[idx + 1] == "reporting"
                     ):
+                        # if there is already a valid match when we go to the next type
+                        if curr_nonnumeric_match:
+                            break
                         in_sequence = True
                         current_match = "smaller_reporting_company"
+                        last_substring_match = substring
 
             print(current_match)
 
@@ -193,6 +220,6 @@ def download_filing(index_url: str, company_description: int):
 
 
 download_filing(
-    index_url="https://www.sec.gov/Archives/edgar/data/945764/0000945764-18-000066-index.html",
+    index_url="https://www.sec.gov/Archives/edgar/data/894627/0000894627-21-000024-index.html",
     company_description=None,
 )
