@@ -29,15 +29,16 @@ def companies_logic(req_per_min=300):
     company_handler.validate_filings_type()
     res = company_handler.fix_duplicate_companies()
     for company in res:
-        print(company["data"][0]["cik"])
-        print(company["data"][0]["year"])
+        print(company["cik"])
+        print(company["year"])
         print("---------")
 
 
 if __name__ == "__main__":
-    #companies_logic(req_per_min=100)
+    companies_logic(req_per_min=100)
 
     time_series_logic(url="http://localhost:8000/api/v1/stock_price/")
+    time.sleep(180)
     time_series_logic(url="http://localhost:8000/api/v1/stock_price/inflation/")
 
     pass

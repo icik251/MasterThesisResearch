@@ -95,20 +95,24 @@ class CompanyHandler:
         resp = requests.get(
             f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={ticker}&apikey={self.av_api_key}"
         )
-        if resp.status_code == 200 and resp.text != "{}":
-            dict_of_company = json.loads(resp.text)
-            if int(dict_of_company["CIK"]) != cik:
-                print(f"Not matching for {ticker} | {dict_of_company['CIK']} and {cik}")
-                return False
-            if dict_of_company["Country"] != country:
+        try:
+            if resp.status_code == 200 and resp.text != "{}":
+                dict_of_company = json.loads(resp.text)
+                if int(dict_of_company["CIK"]) != cik:
+                    print(f"Not matching for {ticker} | {dict_of_company['CIK']} and {cik}")
+                    return False
+                if dict_of_company["Country"] != country:
+                    print(
+                        f"Not matching for {ticker} | {dict_of_company['Country']} and {country}"
+                    )
+                    return False
+            else:
                 print(
-                    f"Not matching for {ticker} | {dict_of_company['Country']} and {country}"
+                    f"Error for AV for {ticker}, status code {resp.status_code} or empty data"
                 )
                 return False
-        else:
-            print(
-                f"Error for AV for {ticker}, status code {resp.status_code} or empty data"
-            )
+        except Exception as e:
+            print(e)
             return False
 
         return True
@@ -127,7 +131,7 @@ class CompanyHandler:
             )
             resp = json.loads(resp.text)
             if resp["code"] == 200:
-                list_of_fixed_companies.append(json.loads(resp["data"]))
+                list_of_fixed_companies.append(resp["data"])
             else:
                 print(f"Error on company: {company['cik']} - {company['year']}")
 
