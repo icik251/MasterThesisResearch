@@ -188,7 +188,7 @@ def reformat_cik_ticker_json(path_to_json, path_to_save):
 # create_cik_ticker_quarters("APIClient\data\cik_to_ticker\cik_ticker_sec_final.json")
 
 # Save to DB using multiprocessing
-finalize_company_base(
-    path_res_cik_ticker_json="APIClient/data/cik_to_ticker/res_cik_ticker_till_2022-QTR1.json",
-    path_edgar="APIClient/data/edgar",
-)
+# finalize_company_base(
+#     path_res_cik_ticker_json="APIClient/data/cik_to_ticker/res_cik_ticker_till_2022-QTR1.json",
+#     path_edgar="APIClient/data/edgar",
+# )
