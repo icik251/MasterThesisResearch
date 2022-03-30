@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 import pandas as pd
 import json
@@ -87,11 +88,6 @@ class CompanyInputDataHandler:
                     self.list_of_input_company.append(curr_input_data)
 
     def get_percentage_diff(self, first, second):
-        # try:
-        #     percentage = abs(current - next) / max(current, next) * 100
-        # except ZeroDivisionError:
-        #     percentage = float('inf')
-        # return percentage
         diff = second - first
         change = 0
         try:
@@ -126,21 +122,102 @@ class CompanyInputDataHandler:
 
             curr_sample_input["percentage_change"] = perc_change
 
+    def separate_paragraphs(self):
+        for item in self.list_of_input_company:
+            try:
+                mda_section_splitted = item["mda_section"].split("\n")
+                dict_of_paragraphs_mda = self.reformat_section(mda_section_splitted)
+                item["mda_paragraphs"] = dict_of_paragraphs_mda
+            except Exception as e:
+                print(e)
+
+            try:
+                risk_section_splitted = item["risk_section"].split("\n")
+                dict_of_paragraphs_risk = self.reformat_section(risk_section_splitted)
+                item["risk_paragraphs"] = dict_of_paragraphs_risk
+
+            # Testing
+            # with open(
+            #     f'Services/data/paragraphs/mda_paragraphs_json_{item["year"]}_{item["type"]}_{item["cik"]}.json',
+            #     "w",
+            #     encoding="utf-8",
+            # ) as f:
+            #     json.dump(dict_of_paragraphs_mda, f, ensure_ascii=False)
+
+            # with open(
+            #     f'Services/data/paragraphs/risk_paragraphs_json_{item["year"]}_{item["type"]}_{item["cik"]}.json',
+            #     "w",
+            #     encoding="utf-8",
+            # ) as f:
+            #     json.dump(dict_of_paragraphs_risk, f, ensure_ascii=False)
+            except Exception as e:
+                print(e)
+
+    def reformat_section(self, section_splitted, threshold_for_paragraph=20):
+        """
+        Things we remove:
+        - string ending on ':' (because a table follows),
+        - [DATA_TABLE_REMOVED],
+        - MDA and QQD section names
+
+        """
+        list_of_after_table_numbers = [
+            "(1)",
+            "(2)",
+            "(3)",
+            "(4)",
+            "(5)",
+            "(6)",
+            "(7)",
+            "(8)",
+            "(9)",
+        ]
+        dict_of_paragraphs = defaultdict(str)
+        curr_paragraph_key = None
+        paragraph_title = False
+        len_section_spitted = len(section_splitted)
+        for idx in range(len_section_spitted):
+            section_splitted[idx] = section_splitted[idx].strip()
+            # print(section_splitted[idx])
+            # captures what we want to skip
+            if (
+                len(section_splitted[idx]) <= 3
+                or section_splitted[idx].endswith(":")
+                or section_splitted[idx] == "[DATA_TABLE_REMOVED]"
+                or "_" in section_splitted[idx]
+                or idx == 0
+                or idx == len_section_spitted - 1
+                or section_splitted[idx].split()[0] in list_of_after_table_numbers
+            ):
+                continue
+            elif len(section_splitted[idx].split()) <= threshold_for_paragraph:
+                if paragraph_title:
+                    curr_paragraph_key += "|" + section_splitted[idx]
+                else:
+                    curr_paragraph_key = section_splitted[idx]
+                paragraph_title = True
+            else:
+                dict_of_paragraphs[curr_paragraph_key] += (section_splitted[idx]) + "\n"
+                paragraph_title = False
+
+        return dict_of_paragraphs
+
     def logic(self):
         self.init_prepare_data()
         self.create_labels()
+        self.separate_paragraphs()
+
+        # Testing purposes
+        # Remove last element from list as it is without label
+        self.list_of_input_company.pop()
+        with open(
+            f"Services/data/sample_inputs/sample_input_{self.cik}.json",
+            "w",
+            encoding="utf-8",
+        ) as f:
+            json.dump(self.list_of_input_company, f, ensure_ascii=False)
 
 
 df_filings_deadlines = pd.read_csv("Services/data/filing_deadlines.csv")
 company_input_data_handler_obj = CompanyInputDataHandler(2178, df_filings_deadlines)
 company_input_data_handler_obj.logic()
-
-for sample_input in company_input_data_handler_obj.list_of_input_company:
-    print(f"Filing date: {sample_input['filing_date']}")
-    print(f"Period of report: {sample_input['period_of_report']}")
-    print(f"Year: {sample_input['year']} | Q: {sample_input['q']}")
-    print(f"Type of report: {sample_input['type']}")
-    print(f"Is Filing on time: {sample_input['is_filing_on_time']}")
-    print(f"Class label: {sample_input['label']}")
-    print(f"Percentage change: {sample_input['percentage_change']}")
-    print("----------------")
