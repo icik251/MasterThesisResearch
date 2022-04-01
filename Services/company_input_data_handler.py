@@ -1,34 +1,69 @@
 from collections import defaultdict
 from datetime import datetime
+import traceback
 import pandas as pd
 import json
 import requests
 
+from mongo_handler import MongoHandler
+
 
 class CompanyInputDataHandler:
-    def __init__(self, cik, df_filings_deadlines) -> None:
-        self.cik = cik
+    def __init__(
+        self, list_company, list_inflation_prices, df_filings_deadlines
+    ) -> None:
+        self.list_company = list_company
+        self.list_inflation_prices = list_inflation_prices
         self.df_filings_deadlines = df_filings_deadlines
         self.list_of_input_company = []
+
+        self.k_folds = [1, 2, 3, 4]
+        self.k_fold_rules = {
+            2017: {1: "val", 2: "train", 3: "train", 4: "train"},
+            2018: {1: "train", 2: "val", 3: "train", 4: "train"},
+            2019: {1: "train", 2: "train", 3: "val", 4: "train"},
+            2020: {1: "train", 2: "train", 3: "train", 4: "val"},
+            2021: {1: "test", 2: "test", 3: "test", 4: "test"},
+        }
+
+        # basically if we are 2017, we indicate that for K-FOLD 1, this is used for val
+        # for K-FOLD 2, this is used for train, etc.
+        # Example for 2017
+        # self.k_fold_config_example = {1: "val", 2: "train", 3: "train", 4: "train"}
 
     def _is_filing_on_time(self, filing_type, quarter, company_type, filing_date):
         # check if company_type was modified
         res_type = company_type.split(";")
         company_type = res_type[1] if len(res_type) > 1 else res_type[0]
+        
+        # change to non_accelerated if smaller
+        company_type = (
+            "non_accelerated_filer"
+            if company_type == "smaller_reporting_company"
+            else company_type
+        )
 
-        filing_date_datetime = datetime.fromisoformat(filing_date)
+        filing_date_datetime = datetime.fromisoformat(str(filing_date))
         try:
             deadline_str = self.df_filings_deadlines.query(
                 f'filing_type=="{filing_type[:3]}-{quarter}"'
-            )[f"{company_type}"].values[0]
+            )[f"{company_type}"]
+            
+            if deadline_str.values.size > 0:
+                deadline_str = deadline_str.values[0]
+            else:
+                print(f"CIK: {self.list_company[0]['cik']}")
+                print("Not on time, going into the next quarter")
+                return False
+            
         except Exception as e:
-            print(e)
-            return None
+            print(traceback.format_exc())
+            print(f"CIK: {self.list_company[0]['cik']}")
+            # If it is not found it means it goes in the next quarter so it is not on time
+            return False
 
         deadline_str = deadline_str.replace("year", str(filing_date_datetime.year))
         deadline_datetime = datetime.strptime(deadline_str, "%Y-%d-%m")
-        # print("Filing_date", filing_date_datetime)
-        # print("Deadline_date", deadline_datetime)
         if filing_date_datetime > deadline_datetime:
             return False
         return True
@@ -37,38 +72,40 @@ class CompanyInputDataHandler:
         for idx, item in enumerate(stock_prices_list):
             if item["timestamp"] == filing_date:
                 return stock_prices_list[idx], stock_prices_list[idx + 1]
+        return None, None
 
-    def init_prepare_data(self):
-        resp = json.loads(
-            requests.get(f"http://localhost:8000/api/v1/company/{self.cik}").text
-        )
-        resp_stock_prices = json.loads(
-            requests.get(
-                f"http://localhost:8000/api/v1/stock_price/inflation/{self.cik}"
-            ).text
-        )
-        if resp["code"] == 200:
-            curr_company_list = resp["data"]
-        else:
-            print(resp["message"])
-        if resp_stock_prices["code"] == 200:
-            curr_stock_prices_list = resp_stock_prices["data"]
-        else:
-            print(resp_stock_prices["message"])
+    def _create_k_fold_config(self, year):
+        k_fold_config = {}
+        for k in self.k_folds:
+            split_type = self.k_fold_rules[year][k]
+            k_fold_config[str(k)] = split_type
+        return k_fold_config
 
-        for company_year_dict in curr_company_list:
+    def init_prepare_data(self, filing_types_to_process=["10K", "10Q"]):
+        for company_year_dict in self.list_company:
             for quarter in company_year_dict["quarters"]:
                 for metadata in quarter["metadata"]:
+                    if metadata["type"] not in filing_types_to_process:
+                        continue
+
                     curr_input_data = {}
                     t_obj, t_1_obj = self._get_price_for_filing_date(
-                        curr_stock_prices_list, metadata["filing_date"]
+                        self.list_inflation_prices, metadata["filing_date"]
                     )
+                    if not t_obj and not t_1_obj:
+                        self.list_of_input_company = []
+                        return None
+
                     filing_on_time = self._is_filing_on_time(
                         metadata["type"],
                         quarter["q"],
                         metadata["company_type"],
                         metadata["filing_date"],
                     )
+                    k_fold_config = self._create_k_fold_config(
+                        company_year_dict["year"]
+                    )
+
                     curr_input_data["cik"] = company_year_dict["cik"]
                     curr_input_data["year"] = company_year_dict["year"]
                     curr_input_data["type"] = metadata["type"]
@@ -85,6 +122,8 @@ class CompanyInputDataHandler:
                         "adjusted_close"
                     ]
                     curr_input_data["volume_next_day_filing_date"] = t_1_obj["volume"]
+                    curr_input_data["k_fold_config"] = k_fold_config
+
                     self.list_of_input_company.append(curr_input_data)
 
     def get_percentage_diff(self, first, second):
@@ -129,29 +168,17 @@ class CompanyInputDataHandler:
                 dict_of_paragraphs_mda = self.reformat_section(mda_section_splitted)
                 item["mda_paragraphs"] = dict_of_paragraphs_mda
             except Exception as e:
-                print(e)
+                print(traceback.format_exc())
+                item["mda_paragraphs"] = {}
 
             try:
                 risk_section_splitted = item["risk_section"].split("\n")
                 dict_of_paragraphs_risk = self.reformat_section(risk_section_splitted)
                 item["risk_paragraphs"] = dict_of_paragraphs_risk
 
-            # Testing
-            # with open(
-            #     f'Services/data/paragraphs/mda_paragraphs_json_{item["year"]}_{item["type"]}_{item["cik"]}.json',
-            #     "w",
-            #     encoding="utf-8",
-            # ) as f:
-            #     json.dump(dict_of_paragraphs_mda, f, ensure_ascii=False)
-
-            # with open(
-            #     f'Services/data/paragraphs/risk_paragraphs_json_{item["year"]}_{item["type"]}_{item["cik"]}.json',
-            #     "w",
-            #     encoding="utf-8",
-            # ) as f:
-            #     json.dump(dict_of_paragraphs_risk, f, ensure_ascii=False)
             except Exception as e:
-                print(e)
+                print(traceback.format_exc())
+                item["risk_paragraphs"] = {}
 
     def reformat_section(self, section_splitted, threshold_for_paragraph=20):
         """
@@ -197,27 +224,49 @@ class CompanyInputDataHandler:
                     curr_paragraph_key = section_splitted[idx]
                 paragraph_title = True
             else:
-                dict_of_paragraphs[curr_paragraph_key] += (section_splitted[idx]) + "\n"
+                dict_of_paragraphs[str(curr_paragraph_key)] += (
+                    section_splitted[idx]
+                ) + "\n"
                 paragraph_title = False
 
         return dict_of_paragraphs
 
     def logic(self):
         self.init_prepare_data()
-        self.create_labels()
-        self.separate_paragraphs()
+        # if company is not skipped because of lacking stock prices like cik:874499
+        if self.list_of_input_company:
+            self.create_labels()
+            self.separate_paragraphs()
 
-        # Testing purposes
-        # Remove last element from list as it is without label
-        self.list_of_input_company.pop()
-        with open(
-            f"Services/data/sample_inputs/sample_input_{self.cik}.json",
-            "w",
-            encoding="utf-8",
-        ) as f:
-            json.dump(self.list_of_input_company, f, ensure_ascii=False)
 
+cik = 1681459
+mongo_handler = MongoHandler()
+client = mongo_handler.connect_to_mongo()
+db = mongo_handler.get_database()
+curr_company = db["company"].find({"cik": cik})
+list_company = []
+for company in curr_company:
+    list_company.append(company)
+
+curr_stock_prices = (
+    db["stock_price"]
+    .find(
+        {
+            "metadata.cik": cik,
+            "metadata.ts_type": "adj_inflation",
+        }
+    )
+    .sort("timestamp", 1)
+)
+
+list_stock_prices = []
+for stock_price in curr_stock_prices:
+    list_stock_prices.append(stock_price)
 
 df_filings_deadlines = pd.read_csv("Services/data/filing_deadlines.csv")
-company_input_data_handler_obj = CompanyInputDataHandler(2178, df_filings_deadlines)
+company_input_data_handler_obj = CompanyInputDataHandler(
+    list_company, list_stock_prices, df_filings_deadlines
+)
 company_input_data_handler_obj.logic()
+
+print(company_input_data_handler_obj.list_of_input_company)

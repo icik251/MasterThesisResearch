@@ -1,6 +1,7 @@
 import time
 from company_handler import CompanyHandler
 from time_series_handler import TimeSeriesHandler
+from input_data_handler import InputDataHandler
 
 
 def time_series_logic(url):
@@ -32,13 +33,19 @@ def companies_logic(req_per_min=300):
         print(company["cik"])
         print(company["year"])
         print("---------")
+        
+def input_data_logic(path_to_cleaned_df = 'APIClient/data/df_text_cleaned.csv'):
+    input_data_obj = InputDataHandler(path_to_cleaned_df)
+    input_data_obj.add_input_data()
 
 
 if __name__ == "__main__":
-    companies_logic(req_per_min=100)
+    # companies_logic(req_per_min=100)
 
-    time_series_logic(url="http://localhost:8000/api/v1/stock_price/")
-    time.sleep(180)
-    time_series_logic(url="http://localhost:8000/api/v1/stock_price/inflation/")
+    # time_series_logic(url="http://localhost:8000/api/v1/stock_price/")
+    # time.sleep(180)
+    # time_series_logic(url="http://localhost:8000/api/v1/stock_price/inflation/")
 
+    input_data_logic()
+    
     pass
