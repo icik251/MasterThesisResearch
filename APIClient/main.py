@@ -2,6 +2,7 @@ import time
 from company_handler import CompanyHandler
 from time_series_handler import TimeSeriesHandler
 from input_data_handler import InputDataHandler
+from fundamental_data_handler import FundamentalDataHandler
 
 
 def time_series_logic(url):
@@ -9,6 +10,7 @@ def time_series_logic(url):
 
     timeseries_handler = TimeSeriesHandler(url)
     timeseries_handler.add_timeseries()
+
 
 def companies_logic(req_per_min=300):
     # Adding companies and fix duplicated ones
@@ -24,7 +26,7 @@ def companies_logic(req_per_min=300):
     company_handler.add_companies(
         list_of_companies, req_per_min=req_per_min, from_year=2017
     )
-    
+
     # becuase they are sent to the queue and not yet processed
     time.sleep(90)
     company_handler.validate_filings_type()
@@ -33,10 +35,16 @@ def companies_logic(req_per_min=300):
         print(company["cik"])
         print(company["year"])
         print("---------")
-        
-def input_data_logic(path_to_cleaned_df = 'APIClient/data/df_text_cleaned.csv'):
+
+
+def input_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv"):
     input_data_obj = InputDataHandler(path_to_cleaned_df)
     input_data_obj.add_input_data()
+
+
+def fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv"):
+    fundamental_data_obj = FundamentalDataHandler(path_to_cleaned_df)
+    fundamental_data_obj.add_fundamental_data()
 
 
 if __name__ == "__main__":
@@ -46,6 +54,8 @@ if __name__ == "__main__":
     # time.sleep(180)
     # time_series_logic(url="http://localhost:8000/api/v1/stock_price/inflation/")
 
-    input_data_logic()
-    
+    # input_data_logic()
+
+    fundamental_data_logic()
+
     pass
