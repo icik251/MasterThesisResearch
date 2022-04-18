@@ -53,9 +53,9 @@ if __name__ == "__main__":
     # time_series_logic(url="http://localhost:8000/api/v1/stock_price/")
     # time.sleep(180)
     # time_series_logic(url="http://localhost:8000/api/v1/stock_price/inflation/")
-
-    # input_data_logic()
-
+    # time.sleep(60)
     fundamental_data_logic()
+    
+    input_data_logic()
 
     pass

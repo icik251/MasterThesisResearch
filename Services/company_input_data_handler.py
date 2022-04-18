@@ -2,18 +2,18 @@ from collections import defaultdict
 from datetime import datetime
 import traceback
 import pandas as pd
+from mongo_handler import MongoHandler
 import json
 import requests
-
-from mongo_handler import MongoHandler
 
 
 class CompanyInputDataHandler:
     def __init__(
-        self, list_company, list_inflation_prices, df_filings_deadlines
+        self, list_company, list_inflation_prices, fundamental_data_dict, df_filings_deadlines
     ) -> None:
         self.list_company = list_company
         self.list_inflation_prices = list_inflation_prices
+        self.fundamental_data_dict = fundamental_data_dict
         self.df_filings_deadlines = df_filings_deadlines
         self.list_of_input_company = []
 
@@ -35,7 +35,7 @@ class CompanyInputDataHandler:
         # check if company_type was modified
         res_type = company_type.split(";")
         company_type = res_type[1] if len(res_type) > 1 else res_type[0]
-        
+
         # change to non_accelerated if smaller
         company_type = (
             "non_accelerated_filer"
@@ -48,14 +48,14 @@ class CompanyInputDataHandler:
             deadline_str = self.df_filings_deadlines.query(
                 f'filing_type=="{filing_type[:3]}-{quarter}"'
             )[f"{company_type}"]
-            
+
             if deadline_str.values.size > 0:
                 deadline_str = deadline_str.values[0]
             else:
                 print(f"CIK: {self.list_company[0]['cik']}")
                 print("Not on time, going into the next quarter")
-                return False
-            
+                return False, None
+
         except Exception as e:
             print(traceback.format_exc())
             print(f"CIK: {self.list_company[0]['cik']}")
@@ -65,12 +65,18 @@ class CompanyInputDataHandler:
         deadline_str = deadline_str.replace("year", str(filing_date_datetime.year))
         deadline_datetime = datetime.strptime(deadline_str, "%Y-%d-%m")
         if filing_date_datetime > deadline_datetime:
-            return False
-        return True
+            return False, None
+        return True, deadline_datetime
 
     def _get_price_for_filing_date(self, stock_prices_list, filing_date):
         for idx, item in enumerate(stock_prices_list):
             if item["timestamp"] == filing_date:
+                return stock_prices_list[idx], stock_prices_list[idx + 1]
+        return None, None
+    
+    def _get_price_for_filing_deadline_date(self, stock_prices_list, deadline_str):
+        for idx, item in enumerate(stock_prices_list):
+            if item["timestamp"] == deadline_str:
                 return stock_prices_list[idx], stock_prices_list[idx + 1]
         return None, None
 
@@ -89,19 +95,31 @@ class CompanyInputDataHandler:
                         continue
 
                     curr_input_data = {}
-                    t_obj, t_1_obj = self._get_price_for_filing_date(
-                        self.list_inflation_prices, metadata["filing_date"]
-                    )
-                    if not t_obj and not t_1_obj:
-                        self.list_of_input_company = []
-                        return None
 
-                    filing_on_time = self._is_filing_on_time(
+                    filing_on_time, deadline_datetime = self._is_filing_on_time(
                         metadata["type"],
                         quarter["q"],
                         metadata["company_type"],
                         metadata["filing_date"],
                     )
+                    
+                    if not filing_on_time:
+                        # if filing is not on time, we take the price after it is filed
+                        t_obj, t_1_obj = self._get_price_for_filing_date(
+                            self.list_inflation_prices, metadata["filing_date"]
+                        )
+                        if not t_obj and not t_1_obj:
+                            self.list_of_input_company = []
+                            return None
+                    else:
+                        # if it is on time, we take the price of the deadline
+                        t_obj, t_1_obj = self._get_price_for_filing_deadline_date(
+                            self.list_inflation_prices, deadline_datetime
+                        )
+                        if not t_obj and not t_1_obj:
+                            self.list_of_input_company = []
+                            return None
+                    
                     k_fold_config = self._create_k_fold_config(
                         company_year_dict["year"]
                     )
@@ -239,6 +257,7 @@ class CompanyInputDataHandler:
             self.separate_paragraphs()
 
 
+
 cik = 1681459
 mongo_handler = MongoHandler()
 client = mongo_handler.connect_to_mongo()
@@ -265,7 +284,7 @@ for stock_price in curr_stock_prices:
 
 df_filings_deadlines = pd.read_csv("Services/data/filing_deadlines.csv")
 company_input_data_handler_obj = CompanyInputDataHandler(
-    list_company, list_stock_prices, df_filings_deadlines
+    list_company, list_stock_prices, [],df_filings_deadlines
 )
 company_input_data_handler_obj.logic()
 
