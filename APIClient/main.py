@@ -50,12 +50,11 @@ def fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.cs
 if __name__ == "__main__":
     # companies_logic(req_per_min=100)
 
-    # time_series_logic(url="http://localhost:8000/api/v1/stock_price/")
+    time_series_logic(url="http://localhost:8000/api/v1/stock_price/")
     # time.sleep(180)
     # time_series_logic(url="http://localhost:8000/api/v1/stock_price/inflation/")
-    # time.sleep(60)
-    fundamental_data_logic()
-    
-    input_data_logic()
+    # time.sleep(120)
+    # fundamental_data_logic()
+    # input_data_logic()
 
     pass

@@ -284,7 +284,7 @@ for stock_price in curr_stock_prices:
 
 df_filings_deadlines = pd.read_csv("Services/data/filing_deadlines.csv")
 company_input_data_handler_obj = CompanyInputDataHandler(
-    list_company, list_stock_prices, [],df_filings_deadlines
+    list_company, list_stock_prices, [] ,df_filings_deadlines
 )
 company_input_data_handler_obj.logic()
 
