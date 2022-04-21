@@ -19,3 +19,13 @@ class InputDataHandler:
                 ).text
             )
             print(resp["code"], "|", resp["message"], f"cik: {cik}")
+            
+    def scale_data(self):
+        for k_fold in range(1,5):
+            resp = json.loads(
+                requests.post(
+                    f"http://localhost:8000/api/v1/scale/",
+                    data=json.dumps({"k_fold": k_fold}),
+                ).text
+            )
+            print(resp["code"], "|", resp["message"], f"k_fold: {k_fold}")

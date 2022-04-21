@@ -40,15 +40,19 @@ def companies_logic(req_per_min=300):
 def input_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv"):
     input_data_obj = InputDataHandler(path_to_cleaned_df)
     input_data_obj.add_input_data()
+    input_data_obj.scale_data()
+
 
 def fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv"):
     fundamental_data_obj = FundamentalDataHandler(path_to_cleaned_df)
     fundamental_data_obj.add_fundamental_data()
 
+
 def fundamenta_data_modify_input_data_kpis():
     fundamental_data_obj = FundamentalDataHandler()
     fundamental_data_obj.modify_input_data_using_kpis()
-    
+
+
 if __name__ == "__main__":
     # companies_logic(req_per_min=100)
 
@@ -57,7 +61,7 @@ if __name__ == "__main__":
     # time_series_logic(url="http://localhost:8000/api/v1/stock_price/inflation/")
     # time.sleep(120)
     # fundamental_data_logic()
-    # input_data_logic()
+    input_data_logic()
     fundamenta_data_modify_input_data_kpis()
 
     pass

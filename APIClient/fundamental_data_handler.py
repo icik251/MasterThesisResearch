@@ -32,7 +32,7 @@ class FundamentalDataHandler:
             for q in list_of_qs:
                 resp = json.loads(
                     requests.post(
-                        f"http://localhost:8000/api/v1/fundamental_data/average/",
+                        f"http://localhost:8000/api/v1/fundamental_data/average_impute/",
                         data=json.dumps({"year": year, "q": q}),
                     ).text
                 )
