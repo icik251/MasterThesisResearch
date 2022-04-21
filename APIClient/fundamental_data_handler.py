@@ -23,3 +23,17 @@ class FundamentalDataHandler:
             print(resp["code"], "|", resp["message"], f"cik: {cik}")
             if idx % req_per_min == 0 and idx != 0:
                 time.sleep(60)
+
+    def modify_input_data_using_kpis(self):
+        list_of_years = [2017, 2018, 2019, 2020, 2021]
+        list_of_qs = [1, 2, 3, 4]
+
+        for year in list_of_years:
+            for q in list_of_qs:
+                resp = json.loads(
+                    requests.post(
+                        f"http://localhost:8000/api/v1/fundamental_data/average/",
+                        data=json.dumps({"year": year, "q": q}),
+                    ).text
+                )
+                print(resp["code"], "|", resp["message"], f"year: {year}, q: {q}")
