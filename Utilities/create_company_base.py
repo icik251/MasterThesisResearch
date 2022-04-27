@@ -4,6 +4,7 @@ import itertools
 import json
 import multiprocessing
 import os
+import time
 import pandas as pd
 import pymongo
 from datetime import datetime
@@ -12,6 +13,8 @@ import multiprocessing as mp
 from multiprocessing import Pool
 
 from itertools import repeat
+
+import requests
 
 
 def create_cik_ticker_quarters(path_cik_ticker_final_json: str):
@@ -54,15 +57,66 @@ def create_cik_ticker_quarters(path_cik_ticker_final_json: str):
 
         print("Data for {} done in {}".format(file_name, datetime.now() - start_time))
 
+def get_company_overview(ticker, api_key="DV3U4RGOYLYSQHN8"):
+    resp = requests.get(
+            f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={ticker}&apikey={api_key}"
+        )
+    try:
+        if resp.status_code == 200 and resp.text != "{}":
+            dict_of_company = json.loads(resp.text)
+            print(ticker, "successful overview")
+            return dict_of_company
+        else:
+            print(ticker, resp.status_code)
+            return None
+    except Exception as e:
+        print(ticker, e)
+        return None
 
+LIST_YEAR_TO_PROCESS = [2017, 2018, 2019, 2020, 2021, 2022]
 def add_company_base_to_db(db, key_ticker, value_dict, dict_of_edgar):
     for key_cik, list_quarters in value_dict.items():
+        # Make check using AlphaVantage API and the overview for each company
+        
+        dict_of_company_overview = get_company_overview(key_ticker)
+        
+        if not dict_of_company_overview or dict_of_company_overview.get("Country", None) != "USA":
+            print(key_ticker, "skipping because empty or not in USA")
+            return     
+        
+        try:
+            av_cik = int(dict_of_company_overview.get("CIK", None)) if dict_of_company_overview.get("CIK", None) else None
+        except:
+            av_cik = None
+            
+        av_name = dict_of_company_overview.get("Name", None)
+        asset_type = dict_of_company_overview.get("AssetType", None)
+        exchange = dict_of_company_overview.get("Exchange", None)
+        currency = dict_of_company_overview.get("Currency", None)
+        country = dict_of_company_overview.get("Country", None)
+        sector = dict_of_company_overview.get("Sector", None)
+        industry = dict_of_company_overview.get("Industry", None)
+        fiscal_year_end = dict_of_company_overview.get("FiscalYearEnd", None)
+        
+        
         dict_to_add_to_db = {
             "ticker": key_ticker,
             "cik": int(key_cik),
+            "av_cik": av_cik,
+            "av_name": av_name,
+            "asset_type": asset_type,
+            "exchange": exchange,
+            "currency": currency,
+            "country": country,
+            "sector": sector,
+            "industry": industry,
+            "fiscal_year_end": fiscal_year_end,
             "available_quarters": {},
         }
         for quarter in sorted(list(set(list_quarters))):
+            if int(quarter.split("-")[0]) not in LIST_YEAR_TO_PROCESS:
+                continue
+            
             curr_quarter_data = dict_of_edgar.get(quarter, None)
             if not curr_quarter_data:
                 continue
@@ -97,7 +151,7 @@ def add_company_base_to_db(db, key_ticker, value_dict, dict_of_edgar):
 
         try:
             db["company_base"].insert_one(dict_to_add_to_db)
-            print(f"{key_cik} added successfully")
+            print(f"{key_ticker} added successfully")
         except Exception as e:
             print("Problem with", key_cik, "and", key_ticker)
 
@@ -116,9 +170,25 @@ def finalize_company_base(
     db = client.SP500_DB
 
     # use multiprocessing and pool
+    count = 0
+    len_res_cik_ticker = len(res_cik_ticker)
+    start_time = datetime.now()
     for key_ticker, dict_values in res_cik_ticker.items():
+        res_db = db["company_base"].find_one({"ticker": key_ticker})
+        if res_db:
+            print(key_ticker, "already added, skipping!")
+            print('-------------------------------------')
+            count += 1
+            continue
+        
         add_company_base_to_db(db, key_ticker, dict_values, dict_of_edgar)
-
+        print('-------------------------------------')
+        count += 1
+        if count % 50 == 0:
+            # print("Sleeping 60 seconds...")
+            # time.sleep(60)
+            print(f"{count}/{len_res_cik_ticker} processed!")
+            print(f"Time elapsed: {datetime.now() - start_time}")
     client.close()
 
 
@@ -188,7 +258,7 @@ def reformat_cik_ticker_json(path_to_json, path_to_save):
 # create_cik_ticker_quarters("APIClient\data\cik_to_ticker\cik_ticker_sec_final.json")
 
 # Save to DB using multiprocessing
-# finalize_company_base(
-#     path_res_cik_ticker_json="APIClient/data/cik_to_ticker/res_cik_ticker_till_2022-QTR1.json",
-#     path_edgar="APIClient/data/edgar",
-# )
+finalize_company_base(
+    path_res_cik_ticker_json="APIClient/data/cik_to_ticker/res_cik_ticker_till_2022-QTR1.json",
+    path_edgar="APIClient/data/edgar",
+)

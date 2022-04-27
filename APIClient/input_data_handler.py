@@ -1,4 +1,5 @@
 import json
+import time
 import pandas as pd
 import requests
 
@@ -24,8 +25,9 @@ class InputDataHandler:
         for k_fold in range(1,5):
             resp = json.loads(
                 requests.post(
-                    f"http://localhost:8000/api/v1/scale/",
+                    f"http://localhost:8000/api/v1/input_data/scale/",
                     data=json.dumps({"k_fold": k_fold}),
                 ).text
             )
             print(resp["code"], "|", resp["message"], f"k_fold: {k_fold}")
+            time.sleep(15)

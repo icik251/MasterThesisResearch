@@ -12,7 +12,6 @@ import json
 
 
 def get_companies():
-
     company_handler = CompanyHandler(
         path_companies_to_extract="D:/PythonProjects/MasterThesisResearch/APIClient/data/nasdaq/energy_all.csv",
     )
