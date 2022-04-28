@@ -2,6 +2,9 @@ import json
 import time
 import pandas as pd
 import requests
+import json
+import requests
+from collections import defaultdict
 
 
 class InputDataHandler:
@@ -20,9 +23,9 @@ class InputDataHandler:
                 ).text
             )
             print(resp["code"], "|", resp["message"], f"cik: {cik}")
-            
+
     def scale_data(self):
-        for k_fold in range(1,5):
+        for k_fold in range(1, 5):
             resp = json.loads(
                 requests.post(
                     f"http://localhost:8000/api/v1/input_data/scale/",
@@ -31,3 +34,65 @@ class InputDataHandler:
             )
             print(resp["code"], "|", resp["message"], f"k_fold: {k_fold}")
             time.sleep(15)
+
+    def set_is_used(self, threshold_count_industry_per_period=2):
+        # list_of_years = [2017, 2018, 2019, 2020, 2021]
+        # list_of_qs = [1, 2, 3, 4]
+
+        # dict_of_res = {}
+        # for year in list_of_years:
+        #     for q in list_of_qs:
+        #         # Exclude 2017 quarter 1:
+        #         if year == 2017 and q == 1:
+        #             continue
+
+        #         resp = json.loads(
+        #             requests.get(
+        #                 f"http://localhost:8000/api/v1/input_data/{year}/{q}"
+        #             ).text
+        #         )
+        #         if resp["code"] == 200:
+        #             dict_of_res[str(year) + "_" + str(q)] = resp["data"]
+
+        # # dict_of_industry_counts = defaultdict(int)
+        # dict_of_industry_counts_per_year_q = defaultdict(lambda: defaultdict(int))
+        # for year_q_k, inputs_data in dict_of_res.items():
+        #     for input_data in inputs_data:
+        #         # dict_of_industry_counts[input_data["industry"]] += 1
+        #         dict_of_industry_counts_per_year_q[year_q_k][
+        #             input_data["industry"]
+        #         ] += 1
+
+        # # Update for industries
+        # list_of_updated_industries = []
+        is_used_json_for_update = json.dumps({"is_used": False})
+        # for year_q, industry_dict in dict_of_industry_counts_per_year_q.items():
+        #     for industry, count in industry_dict.items():
+        #         if (
+        #             count <= threshold_count_industry_per_period
+        #             and industry not in list_of_updated_industries
+        #         ):
+        #             resp = json.loads(
+        #                 requests.put(
+        #                     f"http://localhost:8000/api/v1/input_data/", is_used_json_for_update, params={"industry": industry}
+        #                 ).text
+        #             )
+        #             if resp["code"] == 200:
+        #                 print(
+        #                     f"Successfully is_used updated for {industry} with count {count}"
+        #                 )
+        #                 list_of_updated_industries.append(industry)
+
+        # Update 2017 q1
+        resp = json.loads(
+            requests.put(f"http://localhost:8000/api/v1/input_data/", is_used_json_for_update, params={"year":2017, "q":1}).text
+        )
+        if resp["code"] == 200:
+            print(f"Successfully is_used updated for 2017 q 1")
+        
+        # Update for last quarter as no data in the future is available 
+        resp = json.loads(
+            requests.put(f"http://localhost:8000/api/v1/input_data/", is_used_json_for_update, params={"year":2021, "q":4}).text
+        )
+        if resp["code"] == 200:
+            print(f"Successfully is_used updated for 2021 q 4")

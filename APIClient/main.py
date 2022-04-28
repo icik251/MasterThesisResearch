@@ -37,9 +37,7 @@ def companies_logic(sector="ENERGY & TRANSPORTATION", req_per_min=300):
 
 def input_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv"):
     input_data_obj = InputDataHandler(path_to_cleaned_df)
-    # input_data_obj.add_input_data()
-    input("Press Enter to continue to scale data by k-fold...")
-    input_data_obj.scale_data()
+    input_data_obj.add_input_data()
 
 
 def fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv"):
@@ -50,6 +48,14 @@ def fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.cs
 def fundamenta_data_modify_input_data_kpis(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv"):
     fundamental_data_obj = FundamentalDataHandler(path_to_cleaned_df)
     fundamental_data_obj.modify_input_data_using_kpis()
+    
+def set_is_used_input_data():
+    input_data_obj = InputDataHandler()
+    input_data_obj.set_is_used()
+    
+def scale_logic():
+    input_data_obj = InputDataHandler()
+    input_data_obj.scale_data()
 
 
 if __name__ == "__main__":
@@ -58,11 +64,19 @@ if __name__ == "__main__":
     # time_series_logic(url="http://localhost:8000/api/v1/stock_price/")
     # input("Press Enter to continue to add inflation adjusted stock prices...")
     # time_series_logic(url="http://localhost:8000/api/v1/stock_price/inflation/")
+    """
+        Generate df_text_cleaned before proceeding
+    """
     # input("Press Enter to continue to add fundamental data...")
     # fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv")
     # input("Press Enter to continue to add input data...")
-    input_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv")
-    input("Press Enter to continue to modify input data...")
-    fundamenta_data_modify_input_data_kpis()
+    # input_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv")
+    # input("Press Enter to continue to modify input data...")
+    # fundamenta_data_modify_input_data_kpis()
+    set_is_used_input_data()
+    
+    # The last step will be 
+    input("Press Enter to continue to scale data by k-fold...")
+    scale_logic()
 
     pass
