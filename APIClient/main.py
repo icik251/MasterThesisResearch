@@ -70,13 +70,14 @@ if __name__ == "__main__":
     # input("Press Enter to continue to add fundamental data...")
     # fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv")
     # input("Press Enter to continue to add input data...")
-    # input_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv")
-    # input("Press Enter to continue to modify input data...")
+    input_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv")
+    input("Press Enter to continue to modify input data...")
     # fundamenta_data_modify_input_data_kpis()
+    # input("Press Enter to continue to set is_used...")
     set_is_used_input_data()
     
     # The last step will be 
-    input("Press Enter to continue to scale data by k-fold...")
-    scale_logic()
+    # input("Press Enter to continue to scale data by k-fold...")
+    # scale_logic()
 
     pass
