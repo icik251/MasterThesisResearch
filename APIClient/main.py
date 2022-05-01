@@ -45,14 +45,23 @@ def fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.cs
     fundamental_data_obj.add_fundamental_data()
 
 
-def fundamenta_data_modify_input_data_kpis(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv"):
-    fundamental_data_obj = FundamentalDataHandler(path_to_cleaned_df)
-    fundamental_data_obj.modify_input_data_using_kpis()
+# def fundamenta_data_modify_input_data_kpis(
+#     path_to_cleaned_df="APIClient/data/df_text_cleaned.csv",
+# ):
+#     fundamental_data_obj = FundamentalDataHandler(path_to_cleaned_df)
+#     fundamental_data_obj.modify_input_data_using_kpis()
+
+
+def fundamenta_data_impute_using_knn(url="http://localhost:8000/api/v1/fundamental_data/impute_knn/"):
+    fundamental_data_obj = FundamentalDataHandler()
+    fundamental_data_obj.modify_input_data_using_kpis(url)
     
-def set_is_used_input_data():
+
+def set_is_used_input_data(list_of_ciks_to_remove):
     input_data_obj = InputDataHandler()
-    input_data_obj.set_is_used()
-    
+    input_data_obj.set_is_used(list_of_ciks_to_remove)
+
+
 def scale_logic():
     input_data_obj = InputDataHandler()
     input_data_obj.scale_data()
@@ -65,18 +74,37 @@ if __name__ == "__main__":
     # input("Press Enter to continue to add inflation adjusted stock prices...")
     # time_series_logic(url="http://localhost:8000/api/v1/stock_price/inflation/")
     """
-        Generate df_text_cleaned before proceeding
+    Generate df_text_cleaned before proceeding
     """
     # input("Press Enter to continue to add fundamental data...")
     # fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv")
     # input("Press Enter to continue to add input data...")
-    input_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv")
-    input("Press Enter to continue to modify input data...")
-    # fundamenta_data_modify_input_data_kpis()
+    # input_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv")
     # input("Press Enter to continue to set is_used...")
-    set_is_used_input_data()
+    # list_of_ciks_to_remove = [
+    #     799233,
+    #     746515,
+    #     1134115,
+    #     1160791,
+    #     1509589,
+    #     1383650,
+    #     716006,
+    #     917225,
+    #     1000229,
+    #     1011509,
+    #     314203,
+    #     742278,
+    #     1575828,
+    #     1612720,
+    #     799167,
+    #     783324,
+    # ]
+    # set_is_used_input_data(list_of_ciks_to_remove)
     
-    # The last step will be 
+    input("Press Enter to continue to impute using knn...")
+    fundamenta_data_impute_using_knn()
+
+    # The last step will be
     # input("Press Enter to continue to scale data by k-fold...")
     # scale_logic()
 

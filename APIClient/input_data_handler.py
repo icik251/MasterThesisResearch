@@ -35,7 +35,44 @@ class InputDataHandler:
             print(resp["code"], "|", resp["message"], f"k_fold: {k_fold}")
             time.sleep(15)
 
-    def set_is_used(self, threshold_count_industry_per_period=2):
+    def set_is_used(self, list_of_ciks, threshold_count_industry_per_period=2):
+        is_used_json_for_update = json.dumps({"is_used": False})
+        # Update 2017 q1
+        resp = json.loads(
+            requests.put(
+                f"http://localhost:8000/api/v1/input_data/",
+                is_used_json_for_update,
+                params={"year": 2017, "q": 1},
+            ).text
+        )
+        if resp["code"] == 200:
+            print(f"Successfully is_used updated for 2017 q 1")
+
+        # Update for last quarter as no data in the future is available
+        resp = json.loads(
+            requests.put(
+                f"http://localhost:8000/api/v1/input_data/",
+                is_used_json_for_update,
+                params={"year": 2021, "q": 4},
+            ).text
+        )
+        if resp["code"] == 200:
+            print(f"Successfully is_used updated for 2021 q 4")
+
+        # Update for CIKs that we want to remove because of too many missing data for KPIs
+        for cik in list_of_ciks:
+            resp = json.loads(
+                requests.put(
+                    f"http://localhost:8000/api/v1/input_data/",
+                    is_used_json_for_update,
+                    params={"cik": cik},
+                ).text
+            )
+            if resp["code"] == 200:
+                print(f"Successfully is_used updated for cik {cik}")
+
+        # Updating by industry should be last because before that we remove some companies by CIKs which influences
+        # the number for the industries
         list_of_years = [2017, 2018, 2019, 2020, 2021]
         list_of_qs = [1, 2, 3, 4]
 
@@ -65,7 +102,6 @@ class InputDataHandler:
 
         # Update for industries
         list_of_updated_industries = []
-        is_used_json_for_update = json.dumps({"is_used": False})
         for year_q, industry_dict in dict_of_industry_counts_per_year_q.items():
             for industry, count in industry_dict.items():
                 if (
@@ -74,7 +110,9 @@ class InputDataHandler:
                 ):
                     resp = json.loads(
                         requests.put(
-                            f"http://localhost:8000/api/v1/input_data/", is_used_json_for_update, params={"industry": industry}
+                            f"http://localhost:8000/api/v1/input_data/",
+                            is_used_json_for_update,
+                            params={"industry": industry},
                         ).text
                     )
                     if resp["code"] == 200:
@@ -82,17 +120,3 @@ class InputDataHandler:
                             f"Successfully is_used updated for {industry} with count {count}"
                         )
                         list_of_updated_industries.append(industry)
-
-        # Update 2017 q1
-        resp = json.loads(
-            requests.put(f"http://localhost:8000/api/v1/input_data/", is_used_json_for_update, params={"year":2017, "q":1}).text
-        )
-        if resp["code"] == 200:
-            print(f"Successfully is_used updated for 2017 q 1")
-        
-        # Update for last quarter as no data in the future is available 
-        resp = json.loads(
-            requests.put(f"http://localhost:8000/api/v1/input_data/", is_used_json_for_update, params={"year":2021, "q":4}).text
-        )
-        if resp["code"] == 200:
-            print(f"Successfully is_used updated for 2021 q 4")
