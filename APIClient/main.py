@@ -45,30 +45,39 @@ def fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.cs
     fundamental_data_obj.add_fundamental_data()
 
 
-def fundamenta_data_feature_engineering(
+def fundamental_data_feature_engineering(
     url_modify="http://localhost:8000/api/v1/fundamental_data/average/",
-    url_feature_engineer="http://localhost:8000/api/v1/fundamental_data/feature_engineer/",
+    url_feature_engineer="http://localhost:8000/api/v1/fundamental_data/feature_engineering/",
 ):
     fundamental_data_obj = FundamentalDataHandler()
-    # fundamental_data_obj.modify_input_data_using_kpis(url_modify)
+    fundamental_data_obj.modify_input_data_using_kpis(url_modify)
+    input("Press Enter to continue to feature engineering...")
     fundamental_data_obj.feature_engineer(url_feature_engineer)
 
 
-def fundamenta_data_impute_using_knn(
+def fundamental_data_impute_using_knn(
     url="http://localhost:8000/api/v1/fundamental_data/impute_knn/",
 ):
     fundamental_data_obj = FundamentalDataHandler()
     fundamental_data_obj.modify_input_data_using_kpis(url)
 
 
-def set_is_used_input_data(list_of_ciks_to_remove):
+def set_is_used_input_data(list_of_ciks_to_remove=[], last_set_is_used=False):
     input_data_obj = InputDataHandler()
-    input_data_obj.set_is_used(list_of_ciks_to_remove)
+    input_data_obj.set_is_used(list_of_ciks_to_remove, last_set_is_used=last_set_is_used)
 
 
-def scale_logic():
+def create_k_folds_logic():
     input_data_obj = InputDataHandler()
-    input_data_obj.scale_data()
+    input_data_obj.create_k_folds()
+    
+def scaling_logic():
+    input_data_obj = InputDataHandler()
+    input_data_obj.scaling_labels()
+    
+def scaling_logic_test_set():
+    input_data_obj = InputDataHandler()
+    input_data_obj.scaling_labels_test_set()
 
 
 if __name__ == "__main__":
@@ -84,7 +93,7 @@ if __name__ == "__main__":
     # fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv")
     # input("Press Enter to continue to add input data...")
     # input_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv")
-    # input("Press Enter to continue to set is_used...")
+    # input("Press Enter to continue to set is_used initial...")
     # list_of_ciks_to_remove = [
     #     799233,
     #     746515,
@@ -104,12 +113,17 @@ if __name__ == "__main__":
     #     783324,
     # ]
     # set_is_used_input_data(list_of_ciks_to_remove)
-    # input("Press Enter to continue to impute using knn...")
-    # fundamenta_data_impute_using_knn()
-
-    fundamenta_data_feature_engineering()
-    # The last step will be
-    # input("Press Enter to continue to scale data by k-fold...")
-    # scale_logic()
+    input("Press Enter to continue to impute using knn...")
+    fundamental_data_impute_using_knn()
+    input("Press Enter to continue to calculate averages/medians...")
+    fundamental_data_feature_engineering()
+    input("Press Enter to continue to set is_used_to false for 2017 q2 and q3...")
+    set_is_used_input_data(last_set_is_used=True)
+    input("Press Enter to continue to create k-folds...")
+    create_k_folds_logic()
+    input("Press Enter to continue to scale labels according to k_folds...")
+    scaling_logic()
+    input("Press Enter to continue to scale labels according for the test set...")
+    scaling_logic_test_set()
 
     pass
