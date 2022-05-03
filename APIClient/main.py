@@ -45,17 +45,21 @@ def fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.cs
     fundamental_data_obj.add_fundamental_data()
 
 
-# def fundamenta_data_modify_input_data_kpis(
-#     path_to_cleaned_df="APIClient/data/df_text_cleaned.csv",
-# ):
-#     fundamental_data_obj = FundamentalDataHandler(path_to_cleaned_df)
-#     fundamental_data_obj.modify_input_data_using_kpis()
+def fundamenta_data_feature_engineering(
+    url_modify="http://localhost:8000/api/v1/fundamental_data/average/",
+    url_feature_engineer="http://localhost:8000/api/v1/fundamental_data/feature_engineer/",
+):
+    fundamental_data_obj = FundamentalDataHandler()
+    # fundamental_data_obj.modify_input_data_using_kpis(url_modify)
+    fundamental_data_obj.feature_engineer(url_feature_engineer)
 
 
-def fundamenta_data_impute_using_knn(url="http://localhost:8000/api/v1/fundamental_data/impute_knn/"):
+def fundamenta_data_impute_using_knn(
+    url="http://localhost:8000/api/v1/fundamental_data/impute_knn/",
+):
     fundamental_data_obj = FundamentalDataHandler()
     fundamental_data_obj.modify_input_data_using_kpis(url)
-    
+
 
 def set_is_used_input_data(list_of_ciks_to_remove):
     input_data_obj = InputDataHandler()
@@ -100,10 +104,10 @@ if __name__ == "__main__":
     #     783324,
     # ]
     # set_is_used_input_data(list_of_ciks_to_remove)
-    
-    input("Press Enter to continue to impute using knn...")
-    fundamenta_data_impute_using_knn()
+    # input("Press Enter to continue to impute using knn...")
+    # fundamenta_data_impute_using_knn()
 
+    fundamenta_data_feature_engineering()
     # The last step will be
     # input("Press Enter to continue to scale data by k-fold...")
     # scale_logic()

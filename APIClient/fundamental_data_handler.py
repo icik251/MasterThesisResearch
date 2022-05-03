@@ -37,3 +37,13 @@ class FundamentalDataHandler:
                     ).text
                 )
                 print(resp["code"], "|", resp["message"], f"year: {year}, q: {q}")
+
+    def feature_engineer(self, url):
+        for idx, cik in enumerate(self.list_of_ciks):
+            resp = json.loads(
+                requests.put(
+                    url,
+                    data=json.dumps({"cik": cik}),
+                ).text
+            )
+            print(resp["code"], "|", resp["message"], f"cik: {cik}")
