@@ -62,19 +62,31 @@ def fundamental_data_impute_using_knn(
     fundamental_data_obj.modify_input_data_using_kpis(url)
 
 
-def set_is_used_input_data(list_of_ciks_to_remove=[], last_set_is_used=False):
+def set_is_used_input_data(
+    list_of_ciks_to_remove=[],
+    list_of_ids_to_remove=[],
+    lacking_features_is_used=False,
+    outlier_target_is_used=False,
+):
     input_data_obj = InputDataHandler()
-    input_data_obj.set_is_used(list_of_ciks_to_remove, last_set_is_used=last_set_is_used)
+    input_data_obj.set_is_used(
+        list_of_ciks_to_remove,
+        list_of_ids_to_remove,
+        lacking_features_is_used=lacking_features_is_used,
+        outlier_target_is_used=outlier_target_is_used,
+    )
 
 
 def create_k_folds_logic():
     input_data_obj = InputDataHandler()
     input_data_obj.create_k_folds()
-    
+
+
 def scaling_logic():
     input_data_obj = InputDataHandler()
     input_data_obj.scaling_labels()
-    
+
+
 def scaling_logic_test_set():
     input_data_obj = InputDataHandler()
     input_data_obj.scaling_labels_test_set()
@@ -86,6 +98,7 @@ if __name__ == "__main__":
     # time_series_logic(url="http://localhost:8000/api/v1/stock_price/")
     # input("Press Enter to continue to add inflation adjusted stock prices...")
     # time_series_logic(url="http://localhost:8000/api/v1/stock_price/inflation/")
+
     """
     Generate df_text_cleaned before proceeding
     """
@@ -93,6 +106,9 @@ if __name__ == "__main__":
     # fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv")
     # input("Press Enter to continue to add input data...")
     # input_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv")
+    # """
+    # Analyze using the past data to see which CIKs to remove in this list
+    # """
     # input("Press Enter to continue to set is_used initial...")
     # list_of_ciks_to_remove = [
     #     799233,
@@ -111,19 +127,47 @@ if __name__ == "__main__":
     #     1612720,
     #     799167,
     #     783324,
+    #     82020,
+    #     1634447,
+    #     1433270,
+    #     352955,
+    #     1021635,
+    #     1110805,
+    #     1064728,
+    #     1172358,
+    #     839470,
+    #     1726126,
     # ]
     # set_is_used_input_data(list_of_ciks_to_remove)
-    input("Press Enter to continue to impute using knn...")
-    fundamental_data_impute_using_knn()
-    input("Press Enter to continue to calculate averages/medians...")
-    fundamental_data_feature_engineering()
-    input("Press Enter to continue to set is_used_to false for 2017 q2 and q3...")
-    set_is_used_input_data(last_set_is_used=True)
-    input("Press Enter to continue to create k-folds...")
-    create_k_folds_logic()
-    input("Press Enter to continue to scale labels according to k_folds...")
-    scaling_logic()
-    input("Press Enter to continue to scale labels according for the test set...")
-    scaling_logic_test_set()
+    # input("Press Enter to continue to impute using knn...")
+    # fundamental_data_impute_using_knn()
+    # input("Press Enter to continue to calculate averages/medians...")
+    # fundamental_data_feature_engineering()
+    # input(
+    #     "Press Enter to continue to set is_used_to false for all companies lacking features from the engineered ones"
+    # )
+    # set_is_used_input_data(lacking_features_is_used=True)
+    # input(
+    #     "Press Enter to continue to set is_used_to false for the outliers with the percentage change"
+    # )
+    # list_of_ids_to_remove = [
+    #     "62795156199c6e379f8994a8",
+    #     "62795170c02560533c8994a8",
+    #     "627951862e41d174508994a8",
+    #     "6279518dcd1aecfde58994a8",
+    #     "6279518f6759f8f7cb8994a8",
+    #     "627951a321155cfd1b8994a8",
+    #     "627951a624c07acf3f8994a8",
+    # ]
+    # set_is_used_input_data(list_of_ids_to_remove=list_of_ids_to_remove, outlier_target_is_used=True)
+    
+    # TODO: Make k-folds randomized and scaling after that
+    # input("Press Enter to continue to create k-folds...")
+    # create_k_folds_logic()
+    # input("Press Enter to continue to scale labels according to k_folds...")
+    # scaling_logic()
+    # input("Press Enter to continue to scale labels according for the test set...")
+    # scaling_logic_test_set()
+    #
 
     pass

@@ -3,9 +3,12 @@ import json
 import os
 
 from mongo_handler import MongoHandler
+import random
 
+random.seed(42)
 
-def generate(path_to_input_txt, output_dir):
+def generate(path_to_input_txt, output_dir, val_split_percentage=0.2):
+    list_of_all_samples = []
     list_of_dicts_train_to_save = []
     list_of_dicts_val_to_save = []
     with open(path_to_input_txt, "r") as f:
@@ -14,14 +17,14 @@ def generate(path_to_input_txt, output_dir):
         text, label = line.split("@")
         if label.strip() == "neutral":
             continue
-        # Only for test purposes creating train val splits
-        if idx < 300:
-            list_of_dicts_train_to_save.append({"text": text.strip(), "label": label.strip()})
-        else:
-            list_of_dicts_val_to_save.append({"text": text.strip(), "label": label.strip()})
+            
+        list_of_all_samples.append({"text": text.strip(), "label": label.strip()})
 
+    random.shuffle(list_of_all_samples)
+    num_of_val_samples = int(len(list_of_all_samples) * val_split_percentage)
+    list_of_dicts_val_to_save = list_of_all_samples[:num_of_val_samples]
+    list_of_dicts_train_to_save = list_of_all_samples[num_of_val_samples:]
     save_json_input(list_of_dicts_train_to_save, list_of_dicts_val_to_save, output_dir)
-    
 
 def save_json_input(list_of_train_dicts, list_of_val_dicts, output_dir):
     if not os.path.exists(output_dir):
@@ -34,4 +37,4 @@ def save_json_input(list_of_train_dicts, list_of_val_dicts, output_dir):
         json.dump(list_of_val_dicts, f)
         
 
-generate("Services/data/financial_phrasebank/Sentences_AllAgree.txt", 'Services/data/financial_phrasebank_json')
+generate("Services/data/financial_phrasebank/Sentences_50Agree.txt", 'Services/data/financial_phrasebank_json')

@@ -1,4 +1,5 @@
 import json
+from os import kill
 import time
 import pandas as pd
 import requests
@@ -70,11 +71,13 @@ class InputDataHandler:
     def set_is_used(
         self,
         list_of_ciks=[],
-        last_set_is_used=False,
+        list_of_ids_to_remove=[],
+        lacking_features_is_used=False,
+        outlier_target_is_used=False,
         threshold_count_industry_per_period=2,
     ):
         is_used_json_for_update = json.dumps({"is_used": False})
-        if not last_set_is_used:
+        if not lacking_features_is_used and not outlier_target_is_used:
             # Update 2017 q1
             resp = json.loads(
                 requests.put(
@@ -158,24 +161,38 @@ class InputDataHandler:
                                 f"Successfully is_used updated for {industry} with count {count}"
                             )
                             list_of_updated_industries.append(industry)
-        else:
-            # Update 2017 q2 and q3 because of features
-            resp = json.loads(
-                requests.put(
-                    f"http://localhost:8000/api/v1/input_data/",
-                    is_used_json_for_update,
-                    params={"year": 2017, "q": 2},
-                ).text
-            )
-            if resp["code"] == 200:
-                print(f"Successfully is_used updated for 2017 q 2")
+            # Update for custom indutry "RAILROADS, LINE-HAUL OPERATING"
+            # industry = "RAILROADS, LINE-HAUL OPERATING"
+            # resp = json.loads(
+            #     requests.put(
+            #         f"http://localhost:8000/api/v1/input_data/",
+            #         is_used_json_for_update,
+            #         params={"industry": industry},
+            #     ).text
+            # )
+            # if resp["code"] == 200:
+            #     print(f"Successfully is_used updated for {industry} with count {count} | Custom one because of KNN imputation lacking")
 
+        elif lacking_features_is_used:
+            # Update for all that does not have features
             resp = json.loads(
                 requests.put(
-                    f"http://localhost:8000/api/v1/input_data/",
-                    is_used_json_for_update,
-                    params={"year": 2017, "q": 3},
+                    f"http://localhost:8000/api/v1/input_data/", is_used_json_for_update
                 ).text
             )
             if resp["code"] == 200:
-                print(f"Successfully is_used updated for 2017 q 3")
+                print(f"Successfully is_used updated for all")
+                for k_id, dict_tuple_size_zeros in resp["data"].items():
+                    print(k_id, dict_tuple_size_zeros)
+
+        elif outlier_target_is_used:
+            for _id in list_of_ids_to_remove:
+                resp = json.loads(
+                    requests.put(
+                        f"http://localhost:8000/api/v1/input_data/",
+                        is_used_json_for_update,
+                        params={"_id": _id},
+                    ).text
+                )
+                if resp["code"] == 200:
+                    print(resp["message"])
