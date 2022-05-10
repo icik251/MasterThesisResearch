@@ -77,9 +77,9 @@ def set_is_used_input_data(
     )
 
 
-def create_k_folds_logic():
+def create_k_folds_logic(k_folds=5):
     input_data_obj = InputDataHandler()
-    input_data_obj.create_k_folds()
+    input_data_obj.create_k_folds(k_folds)
 
 
 def scaling_logic():
@@ -98,7 +98,6 @@ if __name__ == "__main__":
     # time_series_logic(url="http://localhost:8000/api/v1/stock_price/")
     # input("Press Enter to continue to add inflation adjusted stock prices...")
     # time_series_logic(url="http://localhost:8000/api/v1/stock_price/inflation/")
-
     """
     Generate df_text_cleaned before proceeding
     """
@@ -160,14 +159,11 @@ if __name__ == "__main__":
     #     "627951a624c07acf3f8994a8",
     # ]
     # set_is_used_input_data(list_of_ids_to_remove=list_of_ids_to_remove, outlier_target_is_used=True)
-    
-    # TODO: Make k-folds randomized and scaling after that
     # input("Press Enter to continue to create k-folds...")
-    # create_k_folds_logic()
-    # input("Press Enter to continue to scale labels according to k_folds...")
-    # scaling_logic()
-    # input("Press Enter to continue to scale labels according for the test set...")
-    # scaling_logic_test_set()
-    #
+    # create_k_folds_logic(k_folds=5)
+    input("Press Enter to continue to scale labels according to k_folds...")
+    scaling_logic()
+    input("Press Enter to continue to scale labels according for the test set...")
+    scaling_logic_test_set()
 
     pass

@@ -25,32 +25,32 @@ class InputDataHandler:
             )
             print(resp["code"], "|", resp["message"], f"cik: {cik}")
 
-    def create_k_folds(self):
+    def create_k_folds(self, k_folds):
+        
+        # Old logic
         # basically if we are 2018, we indicate that for K-FOLD 1, this is used for val
         # for K-FOLD 2, this is used for train, etc.
         # Example for 2018
         # self.k_fold_config_example = {1: "val", 2: "train", 3: "train"}
 
-        # TODO: More k-folds to have more training data in each fold and less validation
-
-        self.k_folds_rules = {
-            # 2017 same as 2018 as they are gonna be in 1 fold
-            2017: {1: "val", 2: "train", 3: "train"},
-            2018: {1: "val", 2: "train", 3: "train"},
-            2019: {1: "train", 2: "val", 3: "train"},
-            2020: {1: "train", 2: "train", 3: "val"},
-            2021: {1: "test", 2: "test", 3: "test"},
-        }
+        # self.k_folds_rules = {
+        #     # 2017 same as 2018 as they are gonna be in 1 fold
+        #     2017: {1: "val", 2: "train", 3: "train"},
+        #     2018: {1: "val", 2: "train", 3: "train"},
+        #     2019: {1: "train", 2: "val", 3: "train"},
+        #     2020: {1: "train", 2: "train", 3: "val"},
+        #     2021: {1: "test", 2: "test", 3: "test"},
+        # }
         resp = json.loads(
             requests.post(
                 f"http://localhost:8000/api/v1/input_data/k_folds/",
-                data=json.dumps({"k_folds_rules": self.k_folds_rules}),
+                data=json.dumps({"k_folds": k_folds}),
             ).text
         )
         print(resp["code"], "|", resp["message"])
 
     def scaling_labels(self):
-        for k_fold in range(1, 4):
+        for k_fold in range(1, 6):
             resp = json.loads(
                 requests.post(
                     f"http://localhost:8000/api/v1/input_data/scaling_labels/",
