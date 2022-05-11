@@ -14,13 +14,31 @@ def generate(output_dir):
     dict_of_k_fold_1 = defaultdict(list)
     dict_of_k_fold_2 = defaultdict(list)
     dict_of_k_fold_3 = defaultdict(list)
+    dict_of_k_fold_4 = defaultdict(list)
+    dict_of_k_fold_5 = defaultdict(list)
+    list_of_features_dicts = [
+            "fundamental_data_imputed_full",
+            "fundamental_data_diff_self_t_1",
+            "fundamental_data_diff_self_t_2",
+            "fundamental_data_diff_industry_t",
+            "fundamental_data_diff_industry_t_1",
+            "fundamental_data_diff_industry_t_2",
+        ]
+    
     for input in data:
         for k_fold, split_type in input["k_fold_config"].items():
             if split_type == "test":
                 continue
             curr_dict = {}
+            # Text data
             curr_dict["mda_paragraphs"] = input["mda_paragraphs"]
-            curr_dict["risk_paragraphs"] = input["risk_paragraphs"]
+            curr_dict["mda_sentences"] = input["mda_sentences"]
+            # Numerical data and categorical
+            for item in list_of_features_dicts:
+                curr_dict[item] = input[item]
+            curr_dict["is_filing_on_time"] = input["is_filing_on_time"]
+            
+            # Labels and split types
             curr_dict["percentage_change"] = input["percentage_change"]
             curr_dict["percentage_change_min_max"] = input["percentage_change_scaled_min_max"][
                 k_fold
@@ -38,11 +56,17 @@ def generate(output_dir):
                 dict_of_k_fold_2[split_type].append(curr_dict)
             elif int(k_fold) == 3:
                 dict_of_k_fold_3[split_type].append(curr_dict)
+            elif int(k_fold) == 4:
+                dict_of_k_fold_4[split_type].append(curr_dict)
+            elif int(k_fold) == 5:
+                dict_of_k_fold_5[split_type].append(curr_dict)
                 
                 
     save_k_fold_input(dict_of_k_fold_1, 1, output_dir)
     save_k_fold_input(dict_of_k_fold_2, 2, output_dir)
     save_k_fold_input(dict_of_k_fold_3, 3, output_dir)
+    save_k_fold_input(dict_of_k_fold_4, 4, output_dir)
+    save_k_fold_input(dict_of_k_fold_5, 5, output_dir)
 
 
 def save_k_fold_input(k_fold_dict, k_fold, output_dir):

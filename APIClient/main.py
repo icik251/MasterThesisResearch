@@ -161,9 +161,9 @@ if __name__ == "__main__":
     # set_is_used_input_data(list_of_ids_to_remove=list_of_ids_to_remove, outlier_target_is_used=True)
     # input("Press Enter to continue to create k-folds...")
     # create_k_folds_logic(k_folds=5)
-    input("Press Enter to continue to scale labels according to k_folds...")
-    scaling_logic()
-    input("Press Enter to continue to scale labels according for the test set...")
-    scaling_logic_test_set()
+    # input("Press Enter to continue to scale labels according to k_folds...")
+    # scaling_logic()
+    # input("Press Enter to continue to scale labels according for the test set...")
+    # scaling_logic_test_set()
 
     pass
