@@ -58,7 +58,7 @@ class InputDataHandler:
                 ).text
             )
             print(resp["code"], "|", resp["message"], f"k_fold: {k_fold}")
-            time.sleep(15)
+            time.sleep(30)
 
     def scaling_labels_test_set(self):
         resp = json.loads(

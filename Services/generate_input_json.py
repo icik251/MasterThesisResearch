@@ -46,6 +46,10 @@ def generate(output_dir):
             curr_dict["percentage_change_standard"] = input[
                 "percentage_change_scaled_standard"
             ][k_fold]
+            curr_dict["percentage_change_robust"] = input[
+                "percentage_change_scaled_robust"
+            ][k_fold]
+            
             curr_dict["label"] = input["label"]
             curr_dict["year"] = input["year"]
             curr_dict["split_type"] = split_type
