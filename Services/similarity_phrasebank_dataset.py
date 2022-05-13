@@ -22,7 +22,7 @@ def get_all_original_samples(
         text, label = line.split("@")
         if label.strip() == "neutral":
             continue
-        
+
         # if label.strip() == "negative":
         #     print(idx)
         list_of_all_samples.append({"text": text.strip(), "label": label.strip()})
@@ -100,21 +100,20 @@ def extract_relevant_samples_by_hand(path_to_mapped_json, path_to_processed_till
 
     list_of_keys = [int(k) for k in list(dict_of_processed_till_now.keys())]
     last_processed_idx = sorted(list_of_keys)[-1]
-    
+
     for idx, item in enumerate(list_of_phrasebank_samples):
         idx = str(idx)
         if int(idx) <= last_processed_idx:
             continue
-        
-        
+
         print(f"----------{idx}/{len(list_of_phrasebank_samples)}--------------")
         print(item["text"])
         print(f"-----------{item['label'].upper()}---------------")
         user_input = input("Relevant (y/n/m): ")
 
         while user_input.lower() not in ["n", "y", "m"]:
-            user_input= input("Provide valid input (y/n/m): ")
-        
+            user_input = input("Provide valid input (y/n/m): ")
+
         if user_input.lower() == "n":
             continue
 
@@ -124,15 +123,14 @@ def extract_relevant_samples_by_hand(path_to_mapped_json, path_to_processed_till
             dict_of_processed_till_now[idx]["original_keep"] = user_input
             for sim_idx, similars in enumerate(dict_of_res[idx]):
                 print("---------Original sentence------------\n")
-                print(item['text'] + '\n')
+                print(item["text"] + "\n")
                 print(f"---------Similar sentence: score {similars[1]}------------\n")
-                print(similars[0] + '\n')
+                print(similars[0] + "\n")
                 print(f"--------{item['label'].upper()}-----------")
                 user_input = input(f"Relevant similar {sim_idx} (y/n/m): ")
                 while user_input.lower() not in ["n", "y", "m"]:
-                    user_input= input("Provide valid input (y/n/m): ")
-                
-                
+                    user_input = input("Provide valid input (y/n/m): ")
+
                 dict_of_processed_till_now[idx][f"similar_{sim_idx}"] = (
                     similars[0],
                     similars[1],
@@ -143,7 +141,43 @@ def extract_relevant_samples_by_hand(path_to_mapped_json, path_to_processed_till
                 json.dump(dict_of_processed_till_now, f)
 
 
+def get_unique_sentences_from_manual_dataset(path_to_adapter_json):
+    # list_of_phrasebank_samples = get_all_original_samples()
+    with open(path_to_adapter_json, "r") as f:
+        dict_of_adapter_dataset = json.load(f)
+    dict_of_adapter_dataset = defaultdict(dict, dict_of_adapter_dataset)
+
+    set_of_unique = set()
+    count_original = 0
+    for curr_idx, v_dict in dict_of_adapter_dataset.items():
+        if v_dict["original_keep"] == "y":
+            set_of_unique.add(v_dict["original"])
+            count_original += 1
+        if v_dict["similar_0"][2] == "y":
+            set_of_unique.add(v_dict["similar_0"][0])
+        if v_dict["similar_1"][2] == "y":
+            set_of_unique.add(v_dict["similar_1"][0])
+        if v_dict["similar_2"][2] == "y":
+            set_of_unique.add(v_dict["similar_2"][0])
+
+    print("-----------------------------------------")
+    print(
+        f"Original samples in the PhraseBank dataset to kept samples {count_original}/{curr_idx} | {round(count_original/int(curr_idx) * 100, 2)} %"
+    )
+    print(
+        f"Unique samples out of possible samples: {len(set_of_unique)}/{len(dict_of_adapter_dataset) * 4}"
+    )
+    print(
+        f"{count_original} samples augmented to {len(set_of_unique)}. | {round(((len(set_of_unique) - count_original) / count_original) * 100, 2)} % increase"
+    )
+
+
 extract_relevant_samples_by_hand(
     "Services/data/adapter_dataset/mapped_phrasebank_to_corpus.json",
     "Services/data/adapter_dataset/extracted_manualy.json",
 )
+
+
+# get_unique_sentences_from_manual_dataset(
+#     "D:/PythonProjects/MasterThesisResearch/Services/data/adapter_dataset/extracted_manualy.json"
+# )
