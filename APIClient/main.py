@@ -3,6 +3,7 @@ from company_handler import CompanyHandler
 from time_series_handler import TimeSeriesHandler
 from input_data_handler import InputDataHandler
 from fundamental_data_handler import FundamentalDataHandler
+from adapter_data_handler import AdapterDataHandler
 
 
 def time_series_logic(url):
@@ -38,6 +39,12 @@ def companies_logic(sector="ENERGY & TRANSPORTATION", req_per_min=300):
 def input_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv"):
     input_data_obj = InputDataHandler(path_to_cleaned_df)
     input_data_obj.add_input_data()
+    
+def adapter_data_logic(k_folds=5):
+    adapter_data_obj = AdapterDataHandler()
+    adapter_data_obj.add_samples()
+    input("Press Enter to continue to create k folds for Adapter data...")
+    adapter_data_obj.create_k_folds(k_folds)
 
 
 def fundamental_data_logic(path_to_cleaned_df="APIClient/data/df_text_cleaned.csv"):
@@ -161,9 +168,9 @@ if __name__ == "__main__":
     # set_is_used_input_data(list_of_ids_to_remove=list_of_ids_to_remove, outlier_target_is_used=True)
     # input("Press Enter to continue to create k-folds...")
     # create_k_folds_logic(k_folds=5)
-    input("Press Enter to continue to scale labels according to k_folds...")
-    scaling_logic()
-    input("Press Enter to continue to scale labels according for the test set...")
-    scaling_logic_test_set()
-
-    pass
+    # input("Press Enter to continue to scale labels according to k_folds...")
+    # scaling_logic()
+    # input("Press Enter to continue to scale labels according for the test set...")
+    # scaling_logic_test_set()
+    # input("Press Enter to continue to add adapter data to the db...")
+    # adapter_data_logic()

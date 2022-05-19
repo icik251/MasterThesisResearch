@@ -16,6 +16,8 @@ def get_all_original_samples(
     list_of_all_samples = []
     list_of_dicts_train_to_save = []
     list_of_dicts_val_to_save = []
+    count_neg = 0
+    count_pos = 0
     with open(path_to_input_txt, "r") as f:
         list_of_lines = f.readlines()
     for idx, line in enumerate(list_of_lines):
@@ -23,10 +25,16 @@ def get_all_original_samples(
         if label.strip() == "neutral":
             continue
 
-        # if label.strip() == "negative":
-        #     print(idx)
+        if label.strip() == "negative":
+            # print(idx)
+            count_neg += 1
+        elif label.strip() == "positive":
+            count_pos += 1
+
         list_of_all_samples.append({"text": text.strip(), "label": label.strip()})
 
+    print("negative: ", count_neg)
+    print("positive: ", count_pos)
     # random.shuffle(list_of_all_samples)
     # num_of_val_samples = int(len(list_of_all_samples) * val_split_percentage)
     # list_of_dicts_val_to_save = list_of_all_samples[:num_of_val_samples]
@@ -111,13 +119,16 @@ def extract_relevant_samples_by_hand(path_to_mapped_json, path_to_processed_till
         print(f"-----------{item['label'].upper()}---------------")
         user_input = input("Relevant (y/n/m): ")
 
-        while user_input.lower() not in ["n", "y", "m"]:
+        while user_input.lower() not in ["n", "y", "m", ""]:
             user_input = input("Provide valid input (y/n/m): ")
 
         if user_input.lower() == "n":
             continue
 
-        elif user_input.lower() == "y" or user_input.lower() == "m":
+        elif user_input.lower() == "y" or user_input.lower() == "":
+            if user_input.lower() == "":
+                user_input = "y"
+
             dict_of_processed_till_now[idx]["original"] = item["text"]
             dict_of_processed_till_now[idx]["original_label"] = item["label"]
             dict_of_processed_till_now[idx]["original_keep"] = user_input
@@ -128,8 +139,11 @@ def extract_relevant_samples_by_hand(path_to_mapped_json, path_to_processed_till
                 print(similars[0] + "\n")
                 print(f"--------{item['label'].upper()}-----------")
                 user_input = input(f"Relevant similar {sim_idx} (y/n/m): ")
-                while user_input.lower() not in ["n", "y", "m"]:
+                while user_input.lower() not in ["n", "y", "m", "nn", ""]:
                     user_input = input("Provide valid input (y/n/m): ")
+
+                if user_input.lower() == "":
+                    user_input = "y"
 
                 dict_of_processed_till_now[idx][f"similar_{sim_idx}"] = (
                     similars[0],
@@ -149,16 +163,41 @@ def get_unique_sentences_from_manual_dataset(path_to_adapter_json):
 
     set_of_unique = set()
     count_original = 0
+    count_positive = 0
+    count_negative = 0
     for curr_idx, v_dict in dict_of_adapter_dataset.items():
+        curr_label = v_dict["original_label"]
+
         if v_dict["original_keep"] == "y":
             set_of_unique.add(v_dict["original"])
             count_original += 1
-        if v_dict["similar_0"][2] == "y":
+            if curr_label == "positive":
+                count_positive += 1
+
+        if v_dict["similar_0"][2] == "y" or v_dict["similar_0"][2] == "nn":
             set_of_unique.add(v_dict["similar_0"][0])
-        if v_dict["similar_1"][2] == "y":
+            if (
+                curr_label == "positive" and v_dict["similar_0"][2] == "nn"
+            ) or curr_label == "negative":
+                count_negative += 1
+            elif curr_label == "positive" and v_dict["similar_0"][2] == "y":
+                count_positive += 1
+        if v_dict["similar_1"][2] == "y" or v_dict["similar_0"][2] == "nn":
             set_of_unique.add(v_dict["similar_1"][0])
-        if v_dict["similar_2"][2] == "y":
+            if (
+                curr_label == "positive" and v_dict["similar_0"][2] == "nn"
+            ) or curr_label == "negative":
+                count_negative += 1
+            elif curr_label == "positive" and v_dict["similar_0"][2] == "y":
+                count_positive += 1
+        if v_dict["similar_2"][2] == "y" or v_dict["similar_0"][2] == "nn":
             set_of_unique.add(v_dict["similar_2"][0])
+            if (
+                curr_label == "positive" and v_dict["similar_0"][2] == "nn"
+            ) or curr_label == "negative":
+                count_negative += 1
+            elif curr_label == "positive" and v_dict["similar_0"][2] == "y":
+                count_positive += 1
 
     print("-----------------------------------------")
     print(
@@ -170,14 +209,15 @@ def get_unique_sentences_from_manual_dataset(path_to_adapter_json):
     print(
         f"{count_original} samples augmented to {len(set_of_unique)}. | {round(((len(set_of_unique) - count_original) / count_original) * 100, 2)} % increase"
     )
+    print(f"Positive to negative samples {count_positive}/{count_negative}")
 
 
-extract_relevant_samples_by_hand(
-    "Services/data/adapter_dataset/mapped_phrasebank_to_corpus.json",
-    "Services/data/adapter_dataset/extracted_manualy.json",
-)
-
-
-# get_unique_sentences_from_manual_dataset(
-#     "D:/PythonProjects/MasterThesisResearch/Services/data/adapter_dataset/extracted_manualy.json"
+# extract_relevant_samples_by_hand(
+#     "Services/data/adapter_dataset/mapped_phrasebank_to_corpus.json",
+#     "Services/data/adapter_dataset/extracted_manualy.json",
 # )
+
+
+get_unique_sentences_from_manual_dataset(
+    "D:/PythonProjects/MasterThesisResearch/Services/data/adapter_dataset/extracted_manualy.json"
+)
