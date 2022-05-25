@@ -2,6 +2,8 @@ from collections import defaultdict
 import json
 import os
 
+from sklearn.model_selection import KFold
+
 from mongo_handler import MongoHandler
 
 
@@ -16,14 +18,6 @@ def generate(output_dir):
     dict_of_k_fold_3 = defaultdict(list)
     dict_of_k_fold_4 = defaultdict(list)
     dict_of_k_fold_5 = defaultdict(list)
-    list_of_features_dicts = [
-            "fundamental_data_imputed_full",
-            "fundamental_data_diff_self_t_1",
-            "fundamental_data_diff_self_t_2",
-            "fundamental_data_diff_industry_t",
-            "fundamental_data_diff_industry_t_1",
-            "fundamental_data_diff_industry_t_2",
-        ]
     
     for input in data:
         for k_fold, split_type in input["k_fold_config"].items():
@@ -34,8 +28,9 @@ def generate(output_dir):
             curr_dict["mda_paragraphs"] = input["mda_paragraphs"]
             curr_dict["mda_sentences"] = input["mda_sentences"]
             # Numerical data and categorical
-            for item in list_of_features_dicts:
-                curr_dict[item] = input[item]
+            curr_dict["features_scaled_min_max"] = input["features_scaled_min_max"][k_fold]
+            curr_dict["features_scaled_standard"] = input["features_scaled_standard"][k_fold]
+            curr_dict["features_scaled_robust"] = input["features_scaled_robust"][k_fold]
             curr_dict["is_filing_on_time"] = input["is_filing_on_time"]
             
             # Labels and split types

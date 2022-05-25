@@ -26,7 +26,7 @@ class InputDataHandler:
             print(resp["code"], "|", resp["message"], f"cik: {cik}")
 
     def create_k_folds(self, k_folds):
-        
+
         # Old logic
         # basically if we are 2018, we indicate that for K-FOLD 1, this is used for val
         # for K-FOLD 2, this is used for train, etc.
@@ -67,6 +67,22 @@ class InputDataHandler:
             ).text
         )
         print(resp["code"], "|", resp["message"])
+
+    def scaling_features(self, list_of_features_to_scale):
+        for k_fold in range(1, 6):
+            resp = json.loads(
+                requests.post(
+                    f"http://localhost:8000/api/v1/input_data/scaling_features/",
+                    data=json.dumps(
+                        {
+                            "k_fold": k_fold,
+                            "list_of_features_to_scale": list_of_features_to_scale,
+                        }
+                    ),
+                ).text
+            )
+            print(resp["code"], "|", resp["message"], f"k_fold: {k_fold}")
+            time.sleep(60)
 
     def set_is_used(
         self,
@@ -182,8 +198,8 @@ class InputDataHandler:
             )
             if resp["code"] == 200:
                 print(f"Successfully is_used updated for all")
-                for k_id, dict_tuple_size_zeros in resp["data"].items():
-                    print(k_id, dict_tuple_size_zeros)
+                # for k_id, dict_tuple_size_zeros in resp["data"].items():
+                #     print(k_id, dict_tuple_size_zeros)
 
         elif outlier_target_is_used:
             for _id in list_of_ids_to_remove:
