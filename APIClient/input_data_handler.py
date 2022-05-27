@@ -68,7 +68,7 @@ class InputDataHandler:
         )
         print(resp["code"], "|", resp["message"])
 
-    def scaling_features(self, list_of_features_to_scale):
+    def scaling_features(self, list_of_features_to_scale, features_name):
         for k_fold in range(1, 6):
             resp = json.loads(
                 requests.post(
@@ -77,6 +77,7 @@ class InputDataHandler:
                         {
                             "k_fold": k_fold,
                             "list_of_features_to_scale": list_of_features_to_scale,
+                            "features_name": features_name,
                         }
                     ),
                 ).text

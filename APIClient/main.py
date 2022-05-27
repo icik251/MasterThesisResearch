@@ -91,16 +91,9 @@ def create_k_folds_logic(k_folds=5):
 
 
 def scaling_logic_features(
-    list_of_features_to_scale=[
-        "fundamental_data_diff_self_t_1",
-        "fundamental_data_diff_self_t_2",
-        "fundamental_data_diff_industry_t",
-        "fundamental_data_diff_industry_t_1",
-        "fundamental_data_diff_industry_t_2",
-    ]
-):
+    list_of_features_to_scale, features_name):
     input_data_obj = InputDataHandler()
-    input_data_obj.scaling_features(list_of_features_to_scale)
+    input_data_obj.scaling_features(list_of_features_to_scale, features_name)
 
 
 def scaling_logic():
@@ -220,8 +213,21 @@ if __name__ == "__main__":
     # scaling_logic()
     # input("Press Enter to continue to scale labels according for the test set...")
     # scaling_logic_test_set()
-    input("Press Enter to continue to scale features according to k_folds...")
-    scaling_logic_features()
+    # input("Press Enter to continue to scale engineered features according to k_folds...")
+    # list_of_engineered_features=[
+    #     "fundamental_data_diff_self_t_1",
+    #     "fundamental_data_diff_self_t_2",
+    #     "fundamental_data_diff_industry_t",
+    #     "fundamental_data_diff_industry_t_1",
+    #     "fundamental_data_diff_industry_t_2",
+    # ]
+    # scaling_logic_features(list_of_engineered_features, "engineered")
+    # input("Press Enter to continue to scale kpis only features according to k_folds...")
+    # list_of_engineered_features = ["fundamental_data_imputed_full"]
+    # scaling_logic_features(list_of_engineered_features, "kpis_only")
+    input("Press Enter to continue to scale kpis and median features according to k_folds...")
+    list_of_engineered_features = ["fundamental_data_imputed_full", "fundamental_data_avg"]
+    scaling_logic_features(list_of_engineered_features, "kpis_median")
     # input("Press Enter to continue to scale labels according for the test set...")
     # scaling_logic_test_set()
     # input("Press Enter to continue to add adapter data to the db...")

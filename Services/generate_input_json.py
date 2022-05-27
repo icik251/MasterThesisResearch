@@ -28,9 +28,19 @@ def generate(output_dir):
             curr_dict["mda_paragraphs"] = input["mda_paragraphs"]
             curr_dict["mda_sentences"] = input["mda_sentences"]
             # Numerical data and categorical
-            curr_dict["features_scaled_min_max"] = input["features_scaled_min_max"][k_fold]
-            curr_dict["features_scaled_standard"] = input["features_scaled_standard"][k_fold]
-            curr_dict["features_scaled_robust"] = input["features_scaled_robust"][k_fold]
+            # All features
+            curr_dict["engineered_features_scaled_min_max"] = input["engineered_features_scaled_min_max"][k_fold]
+            curr_dict["engineered_features_scaled_standard"] = input["engineered_features_scaled_standard"][k_fold]
+            curr_dict["engineered_features_scaled_robust"] = input["engineered_features_scaled_robust"][k_fold]
+            # KPIs only
+            curr_dict["kpis_only_features_scaled_min_max"] = input["kpis_only_features_scaled_min_max"][k_fold]
+            curr_dict["kpis_only_features_scaled_standard"] = input["kpis_only_features_scaled_standard"][k_fold]
+            curr_dict["kpis_only_features_scaled_robust"] = input["kpis_only_features_scaled_robust"][k_fold]
+            # KPIs + average
+            curr_dict["kpis_median_features_scaled_min_max"] = input["kpis_median_features_scaled_min_max"][k_fold]
+            curr_dict["kpis_median_features_scaled_standard"] = input["kpis_median_features_scaled_standard"][k_fold]
+            curr_dict["kpis_median_features_scaled_robust"] = input["kpis_median_features_scaled_robust"][k_fold]
+            # One hot encoding
             curr_dict["is_filing_on_time"] = input["is_filing_on_time"]
             
             # Labels and split types
