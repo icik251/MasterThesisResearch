@@ -90,8 +90,7 @@ def create_k_folds_logic(k_folds=5):
     input_data_obj.create_k_folds(k_folds)
 
 
-def scaling_logic_features(
-    list_of_features_to_scale, features_name):
+def scaling_logic_features(list_of_features_to_scale, features_name):
     input_data_obj = InputDataHandler()
     input_data_obj.scaling_features(list_of_features_to_scale, features_name)
 
@@ -104,6 +103,16 @@ def scaling_logic():
 def scaling_logic_test_set():
     input_data_obj = InputDataHandler()
     input_data_obj.scaling_labels_test_set()
+
+
+def add_adversarial_samples(
+    dict_of_sentiment_sentences={
+        "positive": "The company is doing awesome",
+        "negative": "Everything is going extremely bad",
+    }
+):
+    input_data_obj = InputDataHandler()
+    input_data_obj.create_adversarial_samples(dict_of_sentiment_sentences)
 
 
 if __name__ == "__main__":
@@ -225,10 +234,12 @@ if __name__ == "__main__":
     # input("Press Enter to continue to scale kpis only features according to k_folds...")
     # list_of_engineered_features = ["fundamental_data_imputed_full"]
     # scaling_logic_features(list_of_engineered_features, "kpis_only")
-    input("Press Enter to continue to scale kpis and median features according to k_folds...")
-    list_of_engineered_features = ["fundamental_data_imputed_full", "fundamental_data_avg"]
-    scaling_logic_features(list_of_engineered_features, "kpis_median")
+    # input("Press Enter to continue to scale kpis and median features according to k_folds...")
+    # list_of_engineered_features = ["fundamental_data_imputed_full", "fundamental_data_avg"]
+    # scaling_logic_features(list_of_engineered_features, "kpis_median")
     # input("Press Enter to continue to scale labels according for the test set...")
     # scaling_logic_test_set()
+    # input("Press Enter to continue to insert adversarial samples into the corpus...")
+    # add_adversarial_samples()
     # input("Press Enter to continue to add adapter data to the db...")
     # adapter_data_logic()

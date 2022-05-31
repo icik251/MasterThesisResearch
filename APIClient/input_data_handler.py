@@ -85,6 +85,17 @@ class InputDataHandler:
             print(resp["code"], "|", resp["message"], f"k_fold: {k_fold}")
             time.sleep(60)
 
+    def create_adversarial_samples(self, dict_of_sentiment_sentence):
+        resp = json.loads(
+            requests.post(
+                f"http://localhost:8000/api/v1/input_data/adversarial_sentences/",
+                data=json.dumps(
+                    {"dict_of_sentiment_sentence": dict_of_sentiment_sentence}
+                ),
+            ).text
+        )
+        print(resp["code"], "|", resp["message"])
+
     def set_is_used(
         self,
         list_of_ciks=[],
