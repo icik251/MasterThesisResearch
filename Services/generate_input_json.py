@@ -50,6 +50,9 @@ def generate(output_dir):
             curr_dict["fundamental_data_diff_industry_t_1"] = input["fundamental_data_diff_industry_t_1"]
             curr_dict["fundamental_data_diff_industry_t_2"] = input["fundamental_data_diff_industry_t_2"]
             
+            # Adversarial sentences
+            curr_dict["adversarial_samples"] = input["adversarial_samples"]
+            
             if split_type != "test":
                 # Labels and split types
                 curr_dict["percentage_change"] = input["percentage_change"]
