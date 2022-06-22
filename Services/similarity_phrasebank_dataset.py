@@ -165,6 +165,9 @@ def get_unique_sentences_from_manual_dataset(path_to_adapter_json):
     count_original = 0
     count_positive = 0
     count_negative = 0
+    
+    count_original_pos = 0
+    count_original_neg = 0
     for curr_idx, v_dict in dict_of_adapter_dataset.items():
         curr_label = v_dict["original_label"]
 
@@ -173,6 +176,9 @@ def get_unique_sentences_from_manual_dataset(path_to_adapter_json):
             count_original += 1
             if curr_label == "positive":
                 count_positive += 1
+                count_original_pos += 1
+            elif curr_label == "negative":
+                count_original_neg += 1
 
         if v_dict["similar_0"][2] == "y" or v_dict["similar_0"][2] == "nn":
             set_of_unique.add(v_dict["similar_0"][0])
@@ -201,7 +207,7 @@ def get_unique_sentences_from_manual_dataset(path_to_adapter_json):
 
     print("-----------------------------------------")
     print(
-        f"Original samples in the PhraseBank dataset to kept samples {count_original}/{curr_idx} | {round(count_original/int(curr_idx) * 100, 2)} %"
+        f"Kept samples to original samples in the PhraseBank {count_original}/{(int(curr_idx)+1)} | {round(count_original/(int(curr_idx)+1) * 100, 2)} %"
     )
     print(
         f"Unique samples out of possible samples: {len(set_of_unique)}/{len(dict_of_adapter_dataset) * 4}"
@@ -210,6 +216,7 @@ def get_unique_sentences_from_manual_dataset(path_to_adapter_json):
         f"{count_original} samples augmented to {len(set_of_unique)}. | {round(((len(set_of_unique) - count_original) / count_original) * 100, 2)} % increase"
     )
     print(f"Positive to negative samples {count_positive}/{count_negative}")
+    print(f"Positive to negative samples from the original PhraseBank Dataset (only valid samples) {count_original_pos}/{count_original_neg}")
 
 
 # extract_relevant_samples_by_hand(
@@ -221,3 +228,5 @@ def get_unique_sentences_from_manual_dataset(path_to_adapter_json):
 get_unique_sentences_from_manual_dataset(
     "D:/PythonProjects/MasterThesisResearch/Services/data/adapter_dataset/extracted_manualy.json"
 )
+
+get_all_original_samples()
